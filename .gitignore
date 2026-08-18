@@ -1,0 +1,55 @@
+# Dependencies
+node_modules/
+*/node_modules/
+package-lock.json.bak
+
+# Environment Variables & Secrets
+.env
+.env.local
+.env.*.local
+.env.development
+.env.test
+.env.production
+backend/.env
+
+# Build outputs & Bundles
+dist/
+dist-ssr/
+build/
+*.local
+out/
+.next/
+.cache/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Database & SQLite files (if any)
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+
+# IDE & OS Metadata
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Temporary & Cache files
+*.tmp
+*.temp
+.temp/
+.tmp/
