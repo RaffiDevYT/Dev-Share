@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom';
-import { LogIn, UserPlus, LogOut, Code2, Globe, Layers, CheckCircle2, Search, Command, MessageSquare } from 'lucide-react';
+import { LogIn, UserPlus, LogOut, Code2, Layers, CheckCircle2, Search, Command, MessageSquare } from 'lucide-react';
 import PublicSnippets from './pages/PublicSnippets';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -49,41 +49,48 @@ function NavHeader() {
 
   return (
     <header className="nav-header">
-      <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
+      {/* Brand Logo */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
         <Link to="/" className="brand-link">
           <div className="brand-logo-box">
-            <Code2 size={19} />
+            <span>ds</span>
           </div>
           <span>Dev-Share</span>
         </Link>
+      </div>
 
-        {/* Global Command Palette Trigger */}
+      {/* Center Search Bar with Ctrl+K badge */}
+      <div style={{ flex: 1, maxWidth: '420px', margin: '0 20px' }}>
         <button
           onClick={openPalette}
           style={{
-            background: 'rgba(255, 255, 255, 0.035)',
-            border: '1px solid var(--border-subtle)',
-            borderRadius: '8px',
-            padding: '5px 12px',
+            width: '100%',
+            background: 'rgba(10, 15, 26, 0.8)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            borderRadius: '10px',
+            padding: '7px 14px',
             display: 'flex',
             alignItems: 'center',
-            gap: '8px',
+            justifyContent: 'space-between',
             color: 'var(--text-secondary)',
-            fontSize: '0.82rem',
+            fontSize: '0.85rem',
             cursor: 'pointer',
-            transition: 'all 0.15s'
+            transition: 'all 0.2s',
+            boxShadow: 'inset 0 1px 4px rgba(0, 0, 0, 0.4)'
           }}
           title="Buka Command Palette (Ctrl+K)"
         >
-          <Search size={14} style={{ color: 'var(--emerald)' }} />
-          <span>Cari cepat...</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Search size={15} style={{ color: 'var(--emerald)' }} />
+            <span>Search code, tags, authors...</span>
+          </div>
           <span style={{
             display: 'inline-flex',
             alignItems: 'center',
             gap: '2px',
             background: 'rgba(255, 255, 255, 0.08)',
-            padding: '1px 5px',
-            borderRadius: '4px',
+            padding: '2px 6px',
+            borderRadius: '5px',
             fontSize: '0.7rem',
             color: 'var(--text-tertiary)'
           }}>
@@ -92,13 +99,14 @@ function NavHeader() {
         </button>
       </div>
 
+      {/* Right Navigation & Profile */}
       <nav className="nav-links">
         <Link 
           to="/" 
           className={`nav-btn ${location.pathname === '/' ? 'active' : ''}`}
         >
-          <Globe size={16} />
-          <span>Snippet Publik</span>
+          <Code2 size={16} />
+          <span>Snippets</span>
         </Link>
 
         <Link 
@@ -106,7 +114,7 @@ function NavHeader() {
           className={`nav-btn ${location.pathname.startsWith('/forum') ? 'active' : ''}`}
         >
           <MessageSquare size={16} />
-          <span>Forum Diskusi</span>
+          <span>Forum</span>
         </Link>
 
         {token ? (
@@ -116,50 +124,62 @@ function NavHeader() {
               className={`nav-btn ${location.pathname === '/dashboard' ? 'active' : ''}`}
             >
               <Layers size={16} />
-              <span>Dashboard Saya</span>
+              <span>Dashboard</span>
             </Link>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginLeft: '6px' }}>
-                <Link 
-                  to={`/u/${username}`}
-                  style={{
-                    background: 'rgba(255, 255, 255, 0.04)',
-                    border: '1px solid var(--border-subtle)',
-                    padding: '5px 12px',
-                    borderRadius: '8px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    fontSize: '0.85rem',
-                    textDecoration: 'none'
-                  }}
-                  title="Lihat Profil Saya"
-                >
+              <Link 
+                to={`/u/${username}`}
+                style={{
+                  background: 'rgba(255, 255, 255, 0.04)',
+                  border: '1px solid rgba(16, 185, 129, 0.3)',
+                  padding: '4px 10px',
+                  borderRadius: '10px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  fontSize: '0.85rem',
+                  textDecoration: 'none',
+                  position: 'relative'
+                }}
+                title="Lihat Profil Saya"
+              >
+                <div style={{ position: 'relative' }}>
                   <div style={{
-                    width: '22px',
-                    height: '22px',
+                    width: '26px',
+                    height: '26px',
                     borderRadius: '50%',
                     background: 'linear-gradient(135deg, #10b981, #06b6d4)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    fontSize: '0.72rem',
-                    fontWeight: 700,
+                    fontSize: '0.78rem',
+                    fontWeight: 800,
                     color: '#040910'
                   }}>
                     {username ? username.charAt(0).toUpperCase() : 'U'}
                   </div>
-                  <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{username}</span>
-                </Link>
+                  <span style={{
+                    position: 'absolute',
+                    bottom: '-1px',
+                    right: '-1px',
+                    width: '8px',
+                    height: '8px',
+                    borderRadius: '50%',
+                    background: '#10b981',
+                    border: '2px solid #080c14'
+                  }} />
+                </div>
+                <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{username}</span>
+              </Link>
 
               <button 
                 onClick={handleLogout} 
                 className="btn-secondary"
-                style={{ padding: '6px 12px', borderRadius: '8px', fontSize: '0.82rem' }}
+                style={{ padding: '6px 10px', borderRadius: '8px', fontSize: '0.8rem' }}
                 title="Keluar dari akun"
               >
-                <LogOut size={14} />
-                <span>Keluar</span>
+                <LogOut size={13} />
               </button>
             </div>
           </>

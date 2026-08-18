@@ -303,22 +303,17 @@ export default function CodeBlock({
 
           <span className="lang-pill">{language}</span>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '5px', flexWrap: 'wrap' }}>
-            {/* Live Runner Button */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+            {/* Live Runner Button with Cyber Emerald Glow */}
             {isRunnable && (
               <button 
                 onClick={handleRunCode}
-                className="code-action-btn"
-                style={{ 
-                  background: 'var(--emerald-subtle)', 
-                  borderColor: 'rgba(16, 185, 129, 0.35)', 
-                  color: '#34d399' 
-                }}
-                title="Jalankan kode di browser"
+                className="btn-run-glow"
+                title="Jalankan kode di browser secara interaktif"
                 disabled={isRunning}
               >
-                <Play size={12} fill="#34d399" />
-                <span>{isRunning ? 'Berjalan...' : 'Jalankan'}</span>
+                <Play size={13} fill="#040910" />
+                <span>{isRunning ? 'Berjalan...' : 'Run'}</span>
               </button>
             )}
 
@@ -357,7 +352,7 @@ export default function CodeBlock({
                 disabled={isBookmarking}
               >
                 <Star size={12} fill={isBookmarked ? '#fbbf24' : 'none'} />
-                <span>{bookmarkCount > 0 ? bookmarkCount : 'Star'}</span>
+                <span>{bookmarkCount > 0 ? `${bookmarkCount}` : 'Star'}</span>
               </button>
             )}
 
@@ -372,7 +367,6 @@ export default function CodeBlock({
                 <span>Embed</span>
               </button>
             )}
-
 
             {/* Fork Button */}
             {canFork && id && (
@@ -404,7 +398,7 @@ export default function CodeBlock({
               title="Salin ke Clipboard"
             >
               {isCopied ? <Check size={12} /> : <Copy size={12} />}
-              <span>{isCopied ? 'Tersalin' : 'Salin'}</span>
+              <span>{isCopied ? 'Tersalin' : 'Copy'}</span>
             </button>
           </div>
         </div>

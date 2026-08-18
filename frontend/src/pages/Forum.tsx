@@ -3,7 +3,6 @@ import { Link, useSearchParams } from 'react-router-dom';
 import {
   MessageSquare,
   Plus,
-  Search,
   Send,
   Trash2,
   HelpCircle,
@@ -13,7 +12,8 @@ import {
   ArrowLeft,
   X,
   Layers,
-  ChevronRight
+  TrendingUp,
+  Tag as TagIcon
 } from 'lucide-react';
 import { API_URL } from '../config/api';
 
@@ -56,12 +56,14 @@ interface ForumTopic {
 }
 
 const CATEGORIES = [
-  { id: 'Semua', label: 'Semua Kategori', icon: Layers, color: '#10b981' },
-  { id: 'Tanya Jawab', label: 'Tanya Jawab & Debug', icon: HelpCircle, color: '#f43f5e' },
-  { id: 'Tips & Trik', label: 'Tips & Best Practice', icon: Lightbulb, color: '#fbbf24' },
-  { id: 'Showcase', label: 'Showcase & Review', icon: Rocket, color: '#38bdf8' },
-  { id: 'Umum', label: 'Diskusi Santai', icon: MessageSquare, color: '#a855f7' }
+  { id: 'Semua', label: 'All Discussions', icon: Layers, color: '#10b981', badge: 'Active' },
+  { id: 'Tanya Jawab', label: 'Q&A', icon: HelpCircle, color: '#10b981', badge: 'Emerald' },
+  { id: 'Showcase', label: 'Showcase', icon: Rocket, color: '#a855f7', badge: 'Purple' },
+  { id: 'Tips & Trik', label: 'Tips', icon: Lightbulb, color: '#06b6d4', badge: 'Cyan' },
+  { id: 'Umum', label: 'Resources', icon: MessageSquare, color: '#f59e0b', badge: 'Orange' }
 ];
+
+const CHANNELS = ['#react', '#ai-dev', '#general-chat', '#backend-node', '#database-sql'];
 
 export default function Forum() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -269,394 +271,439 @@ export default function Forum() {
 
   return (
     <div className="container animate-fade-in">
-      {/* Forum Banner */}
-      <div className="app-card neon-top-beam" style={{ padding: '28px 32px', marginBottom: '24px', position: 'relative', overflow: 'hidden' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-              <span style={{ background: 'var(--emerald-subtle)', color: 'var(--emerald-light)', padding: '3px 10px', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 700, border: '1px solid rgba(16, 185, 129, 0.3)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                <Flame size={12} /> Community Hub
-              </span>
-            </div>
-            <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#fff', letterSpacing: '-0.5px', marginBottom: '6px' }}>
-              Forum Diskusi & Chat Developer
-            </h1>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', maxWidth: '620px' }}>
-              Tempat bertukar pikiran, tanya jawab error, membagikan tips coding, dan mengobrol bersama sesama developer di Dev-Share.
-            </p>
-          </div>
-
-          <button
-            onClick={() => {
-              if (!token) {
-                window.dispatchEvent(new CustomEvent('show-toast', { detail: 'Silakan masuk log untuk membuat topik baru' }));
-                return;
-              }
-              setShowCreateModal(true);
-            }}
-            className="btn-primary"
-            style={{ padding: '10px 20px', fontSize: '0.88rem', display: 'flex', alignItems: 'center', gap: '8px' }}
-          >
-            <Plus size={16} />
-            <span>Mulai Topik Diskusi</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Main Content Layout: If activeTopic open, show thread view, else show topic list */}
-      {activeTopic ? (
-        /* DETAIL THREAD VIEW */
-        <div className="animate-fade-in">
-          {/* Back button */}
-          <button
-            onClick={() => setSearchParams({})}
-            className="btn-secondary"
-            style={{ padding: '7px 14px', fontSize: '0.82rem', marginBottom: '18px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-          >
-            <ArrowLeft size={14} />
-            <span>Kembali ke Daftar Forum</span>
-          </button>
-
-          {/* Main Topic Header & Content */}
-          <div className="app-card" style={{ padding: '28px', marginBottom: '20px', borderLeft: `4px solid ${getCategoryColor(activeTopic.category)}` }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '14px', marginBottom: '14px', flexWrap: 'wrap' }}>
-              <div>
-                <span style={{
-                  fontSize: '0.72rem',
-                  padding: '3px 10px',
-                  borderRadius: '6px',
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  border: `1px solid ${getCategoryColor(activeTopic.category)}`,
-                  color: getCategoryColor(activeTopic.category),
-                  fontWeight: 600,
-                  display: 'inline-block',
-                  marginBottom: '8px'
-                }}>
-                  {activeTopic.category}
-                </span>
-                <h2 style={{ fontSize: '1.45rem', fontWeight: 800, color: '#fff', lineHeight: '1.3' }}>
-                  {activeTopic.title}
-                </h2>
-              </div>
-
-              {currentUsername?.toLowerCase() === activeTopic.user?.username?.toLowerCase() && (
-                <button
-                  onClick={() => handleDeleteTopic(activeTopic.id)}
-                  className="btn-secondary"
-                  style={{ color: 'var(--rose)', borderColor: 'rgba(244, 63, 94, 0.3)', padding: '6px 12px', fontSize: '0.78rem' }}
-                  title="Hapus topik ini"
-                >
-                  <Trash2 size={13} />
-                  <span>Hapus Topik</span>
-                </button>
-              )}
-            </div>
-
-            {/* Author info */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '18px', paddingBottom: '14px', borderBottom: '1px solid var(--border-subtle)' }}>
-              <div style={{
-                width: '36px',
-                height: '36px',
-                borderRadius: '50%',
-                background: 'linear-gradient(135deg, #10b981, #06b6d4)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontWeight: 700,
-                fontSize: '0.9rem',
-                color: '#030712'
-              }}>
-                {activeTopic.user?.username ? activeTopic.user.username.charAt(0).toUpperCase() : 'U'}
-              </div>
-              <div>
-                <Link to={`/u/${activeTopic.user?.username}`} style={{ color: '#fff', fontWeight: 600, fontSize: '0.88rem', textDecoration: 'none' }}>
-                  @{activeTopic.user?.username}
-                </Link>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>
-                  Diposting {new Date(activeTopic.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                </div>
-              </div>
-            </div>
-
-            {/* Body */}
-            <div style={{ color: 'var(--text-primary)', fontSize: '0.94rem', lineHeight: '1.7', whiteSpace: 'pre-wrap' }}>
-              {activeTopic.content}
-            </div>
-          </div>
-
-          {/* Replies Section */}
-          <div style={{ marginBottom: '24px' }}>
-            <h3 style={{ fontSize: '1.15rem', fontWeight: 700, color: '#fff', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <MessageSquare size={16} style={{ color: 'var(--emerald)' }} />
-              <span>Balasan Komunitas ({activeTopic.replies?.length || 0})</span>
-            </h3>
-
-            {loadingDetail ? (
-              <div style={{ textAlign: 'center', padding: '30px 0' }}>
-                <p style={{ color: 'var(--text-tertiary)' }}>Memuat percakapan...</p>
-              </div>
-            ) : (!activeTopic.replies || activeTopic.replies.length === 0) ? (
-              <div className="app-card" style={{ padding: '32px', textAlign: 'center', marginBottom: '16px' }}>
-                <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem' }}>Belum ada balasan pada topik ini. Jadilah yang pertama memberikan solusi atau tanggapan!</p>
-              </div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' }}>
-                {activeTopic.replies.map((reply) => {
-                  const isAuthor = currentUsername?.toLowerCase() === reply.user?.username?.toLowerCase();
-                  return (
-                    <div key={reply.id} className={`chat-message-item ${isAuthor ? 'is-owner' : ''}`}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                          <div style={{
-                            width: '32px',
-                            height: '32px',
-                            borderRadius: '50%',
-                            background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontSize: '0.85rem',
-                            fontWeight: 700,
-                            color: '#fff'
-                          }}>
-                            {reply.user?.username ? reply.user.username.charAt(0).toUpperCase() : 'U'}
-                          </div>
-                          <div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                              <Link to={`/u/${reply.user?.username}`} style={{ color: '#fff', fontWeight: 600, fontSize: '0.86rem', textDecoration: 'none' }}>
-                                @{reply.user?.username}
-                              </Link>
-                              {reply.user?.username?.toLowerCase() === activeTopic.user?.username?.toLowerCase() && (
-                                <span style={{ fontSize: '0.68rem', background: 'var(--emerald-subtle)', color: 'var(--emerald)', border: '1px solid rgba(16, 185, 129, 0.3)', padding: '1px 6px', borderRadius: '4px' }}>
-                                  Pembuat Topik
-                                </span>
-                              )}
-                            </div>
-                            <span style={{ fontSize: '0.72rem', color: 'var(--text-tertiary)' }}>
-                              {new Date(reply.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                            </span>
-                          </div>
-                        </div>
-
-                        {isAuthor && (
-                          <button
-                            onClick={() => handleDeleteReply(reply.id)}
-                            style={{ background: 'none', border: 'none', color: 'var(--rose)', cursor: 'pointer', padding: '4px' }}
-                            title="Hapus balasan"
-                          >
-                            <Trash2 size={13} />
-                          </button>
-                        )}
-                      </div>
-
-                      <div style={{ paddingLeft: '42px', color: 'var(--text-primary)', fontSize: '0.9rem', lineHeight: '1.6', whiteSpace: 'pre-wrap' }}>
-                        {reply.content}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-
-            {/* Quick Reply Form */}
-            <form onSubmit={handleSendReply} className="chat-compose-card">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                <Send size={14} style={{ color: 'var(--emerald)' }} />
-                <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#fff' }}>Kirim Tanggapan / Solusi</span>
-              </div>
-
-              <textarea
-                className="chat-input"
-                placeholder={token ? 'Tulis tanggapan, kode solusi, atau jawaban Anda di sini...' : 'Silakan masuk log untuk mengirim balasan pada forum.'}
-                value={replyContent}
-                onChange={(e) => setReplyContent(e.target.value)}
-                disabled={!token || submittingReply}
-                style={{ minHeight: '80px' }}
-              />
-
-              <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '10px' }}>
-                <button
-                  type="submit"
-                  className="btn-primary"
-                  style={{ padding: '8px 20px', fontSize: '0.85rem' }}
-                  disabled={!token || !replyContent.trim() || submittingReply}
-                >
-                  <Send size={13} />
-                  <span>{submittingReply ? 'Mengirim...' : 'Kirim Balasan'}</span>
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      ) : (
-        /* TOPIC LIST VIEW */
-        <div>
-          {/* Categories Bar & Search */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '14px', marginBottom: '20px' }}>
-            {/* Category pills */}
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+      {/* 3-Column Layout matching forum_preview.jpg */}
+      <div style={{ display: 'grid', gridTemplateColumns: '240px 1fr 280px', gap: '22px', alignItems: 'start' }}>
+        {/* Left Column: Categories & Channels */}
+        <aside className="app-card" style={{ padding: '20px', position: 'sticky', top: '88px' }}>
+          {/* Categories */}
+          <div style={{ marginBottom: '22px' }}>
+            <h4 style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '12px' }}>
+              Categories
+            </h4>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
               {CATEGORIES.map((cat) => {
-                const Icon = cat.icon;
                 const isActive = activeCategory === cat.id;
                 return (
                   <button
                     key={cat.id}
                     onClick={() => setActiveCategory(cat.id)}
-                    className={`btn-secondary ${isActive ? 'active' : ''}`}
                     style={{
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '6px',
-                      padding: '7px 14px',
-                      fontSize: '0.82rem',
-                      borderRadius: '10px',
-                      borderColor: isActive ? cat.color : undefined,
-                      color: isActive ? '#fff' : undefined,
-                      background: isActive ? 'rgba(255, 255, 255, 0.08)' : undefined
+                      justifyContent: 'space-between',
+                      padding: '8px 12px',
+                      borderRadius: '8px',
+                      background: isActive ? 'rgba(255, 255, 255, 0.06)' : 'transparent',
+                      border: isActive ? `1px solid ${cat.color}` : '1px solid transparent',
+                      color: isActive ? '#fff' : 'var(--text-secondary)',
+                      fontSize: '0.85rem',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      transition: 'all 0.15s'
                     }}
                   >
-                    <Icon size={14} style={{ color: cat.color }} />
-                    <span>{cat.label}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{
+                        fontSize: '0.68rem',
+                        padding: '1px 6px',
+                        borderRadius: '4px',
+                        background: `${cat.color}20`,
+                        color: cat.color,
+                        fontWeight: 700
+                      }}>
+                        {cat.label}
+                      </span>
+                    </div>
+                    <span style={{ fontSize: '0.72rem', color: 'var(--text-tertiary)' }}>
+                      {topics.filter(t => cat.id === 'Semua' || t.category === cat.id).length}
+                    </span>
                   </button>
                 );
               })}
             </div>
-
-            {/* Search Input */}
-            <div style={{ position: 'relative', width: '100%', maxWidth: '300px' }}>
-              <Search size={15} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-tertiary)' }} />
-              <input
-                type="text"
-                placeholder="Cari topik diskusi..."
-                className="app-input"
-                style={{ paddingLeft: '36px', height: '38px', fontSize: '0.85rem' }}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
           </div>
 
-          {/* Topics List */}
-          {loading ? (
-            <div style={{ textAlign: 'center', padding: '60px 0' }}>
-              <div className="animate-spin" style={{ width: '32px', height: '32px', border: '3px solid rgba(16, 185, 129, 0.2)', borderTopColor: 'var(--emerald)', borderRadius: '50%', margin: '0 auto 12px' }} />
-              <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Memuat topik diskusi...</p>
-            </div>
-          ) : displayedTopics.length === 0 ? (
-            <div className="app-card" style={{ padding: '60px 24px', textAlign: 'center' }}>
-              <MessageSquare size={44} style={{ color: 'var(--text-tertiary)', marginBottom: '14px' }} />
-              <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: '#fff', marginBottom: '6px' }}>
-                {searchQuery ? 'Topik tidak ditemukan' : 'Belum Ada Topik Diskusi'}
-              </h3>
-              <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem', maxWidth: '420px', margin: '0 auto 20px' }}>
-                {searchQuery ? 'Coba cari dengan kata kunci lain.' : 'Jadilah yang pertama membuka obrolan atau mengajukan pertanyaan di forum developer.'}
-              </p>
-              {token && (
-                <button onClick={() => setShowCreateModal(true)} className="btn-primary" style={{ padding: '8px 18px' }}>
-                  <Plus size={15} /> Buat Topik Pertama
-                </button>
-              )}
-            </div>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {displayedTopics.map((topic) => (
+          {/* My Channels matching photo */}
+          <div>
+            <h4 style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '10px' }}>
+              My Channels
+            </h4>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              {CHANNELS.map((ch) => (
                 <div
-                  key={topic.id}
-                  onClick={() => setSearchParams({ topic: String(topic.id) })}
-                  className="app-card"
+                  key={ch}
+                  onClick={() => setSearchQuery(ch.replace('#', ''))}
                   style={{
-                    padding: '18px 22px',
+                    fontSize: '0.82rem',
+                    color: 'var(--text-secondary)',
+                    padding: '4px 8px',
+                    borderRadius: '6px',
                     cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    borderLeft: `3px solid ${getCategoryColor(topic.category)}`
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px'
                   }}
                 >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '16px' }}>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px', flexWrap: 'wrap' }}>
-                        <span style={{
-                          fontSize: '0.7rem',
-                          padding: '2px 8px',
-                          borderRadius: '4px',
-                          background: 'rgba(255, 255, 255, 0.05)',
-                          border: `1px solid ${getCategoryColor(topic.category)}`,
-                          color: getCategoryColor(topic.category),
-                          fontWeight: 600
-                        }}>
-                          {topic.category}
-                        </span>
+                  <TagIcon size={12} style={{ color: 'var(--emerald)' }} />
+                  <span>{ch}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </aside>
 
-                        <span style={{ fontSize: '0.78rem', color: 'var(--text-tertiary)' }}>•</span>
+        {/* Center Column: Discussions Feed & Thread View */}
+        <div>
+          {activeTopic ? (
+            /* DETAIL THREAD VIEW */
+            <div className="animate-fade-in">
+              <button
+                onClick={() => setSearchParams({})}
+                className="btn-secondary"
+                style={{ padding: '7px 14px', fontSize: '0.82rem', marginBottom: '16px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+              >
+                <ArrowLeft size={14} />
+                <span>Back to Discussions</span>
+              </button>
 
-                        <span style={{ fontSize: '0.78rem', color: 'var(--text-tertiary)' }}>
-                          oleh <strong style={{ color: 'var(--text-secondary)' }}>@{topic.author?.username}</strong>
-                        </span>
+              <div className="app-card" style={{ padding: '24px', marginBottom: '18px', borderLeft: `4px solid ${getCategoryColor(activeTopic.category)}` }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px', marginBottom: '12px' }}>
+                  <div>
+                    <span style={{
+                      fontSize: '0.72rem',
+                      padding: '2px 8px',
+                      borderRadius: '4px',
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      border: `1px solid ${getCategoryColor(activeTopic.category)}`,
+                      color: getCategoryColor(activeTopic.category),
+                      fontWeight: 700,
+                      display: 'inline-block',
+                      marginBottom: '8px'
+                    }}>
+                      {activeTopic.category}
+                    </span>
+                    <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#fff', lineHeight: '1.3' }}>
+                      {activeTopic.title}
+                    </h2>
+                  </div>
 
-                        <span style={{ fontSize: '0.78rem', color: 'var(--text-tertiary)' }}>•</span>
+                  {currentUsername?.toLowerCase() === activeTopic.user?.username?.toLowerCase() && (
+                    <button
+                      onClick={() => handleDeleteTopic(activeTopic.id)}
+                      className="btn-secondary"
+                      style={{ color: 'var(--rose)', borderColor: 'rgba(244, 63, 94, 0.3)', padding: '5px 10px', fontSize: '0.76rem' }}
+                    >
+                      <Trash2 size={13} />
+                      <span>Hapus</span>
+                    </button>
+                  )}
+                </div>
 
-                        <span style={{ fontSize: '0.78rem', color: 'var(--text-tertiary)' }}>
-                          {new Date(topic.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
-                        </span>
-                      </div>
-
-                      <h3 style={{ fontSize: '1.08rem', fontWeight: 700, color: '#fff', marginBottom: '6px' }}>
-                        {topic.title}
-                      </h3>
-
-                      <p style={{
-                        color: 'var(--text-secondary)',
-                        fontSize: '0.86rem',
-                        lineHeight: '1.5',
-                        display: '-webkit-box',
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: 'vertical',
-                        overflow: 'hidden'
-                      }}>
-                        {topic.content}
-                      </p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px', paddingBottom: '12px', borderBottom: '1px solid var(--border-subtle)' }}>
+                  <div style={{
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '50%',
+                    background: 'linear-gradient(135deg, #10b981, #06b6d4)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontWeight: 800,
+                    fontSize: '0.85rem',
+                    color: '#040910'
+                  }}>
+                    {activeTopic.user?.username ? activeTopic.user.username.charAt(0).toUpperCase() : 'U'}
+                  </div>
+                  <div>
+                    <Link to={`/u/${activeTopic.user?.username}`} style={{ color: '#fff', fontWeight: 600, fontSize: '0.86rem', textDecoration: 'none' }}>
+                      @{activeTopic.user?.username}
+                    </Link>
+                    <div style={{ fontSize: '0.72rem', color: 'var(--text-tertiary)' }}>
+                      {new Date(activeTopic.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                     </div>
+                  </div>
+                </div>
 
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', alignSelf: 'center' }}>
-                      <div style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '6px',
-                        background: 'rgba(255, 255, 255, 0.04)',
-                        padding: '6px 12px',
-                        borderRadius: '8px',
-                        border: '1px solid var(--border-subtle)'
-                      }}>
-                        <MessageSquare size={14} style={{ color: 'var(--emerald)' }} />
-                        <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#fff' }}>{topic.replyCount}</span>
+                <div style={{ color: 'var(--text-primary)', fontSize: '0.92rem', lineHeight: '1.6', whiteSpace: 'pre-wrap' }}>
+                  {activeTopic.content}
+                </div>
+              </div>
+
+              {/* Replies */}
+              <div style={{ marginBottom: '20px' }}>
+                <h4 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#fff', marginBottom: '12px' }}>
+                  Replies ({activeTopic.replies?.length || 0})
+                </h4>
+
+                {loadingDetail ? (
+                  <p style={{ color: 'var(--text-tertiary)' }}>Memuat percakapan...</p>
+                ) : (!activeTopic.replies || activeTopic.replies.length === 0) ? (
+                  <div className="app-card" style={{ padding: '24px', textAlign: 'center', marginBottom: '14px' }}>
+                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.86rem' }}>Belum ada balasan pada topik ini.</p>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '16px' }}>
+                    {activeTopic.replies.map((reply) => (
+                      <div key={reply.id} className="chat-message-item" style={{ padding: '14px 18px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <Link to={`/u/${reply.user?.username}`} style={{ color: '#fff', fontWeight: 700, fontSize: '0.84rem', textDecoration: 'none' }}>
+                              @{reply.user?.username}
+                            </Link>
+                            <span style={{ fontSize: '0.7rem', color: 'var(--text-tertiary)' }}>
+                              {new Date(reply.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                          </div>
+                          {currentUsername?.toLowerCase() === reply.user?.username?.toLowerCase() && (
+                            <button
+                              onClick={() => handleDeleteReply(reply.id)}
+                              style={{ background: 'none', border: 'none', color: 'var(--rose)', cursor: 'pointer' }}
+                            >
+                              <Trash2 size={12} />
+                            </button>
+                          )}
+                        </div>
+                        <div style={{ color: 'var(--text-primary)', fontSize: '0.88rem', lineHeight: '1.5', whiteSpace: 'pre-wrap' }}>
+                          {reply.content}
+                        </div>
                       </div>
+                    ))}
+                  </div>
+                )}
 
-                      <ChevronRight size={18} style={{ color: 'var(--text-tertiary)' }} />
+                <form onSubmit={handleSendReply} className="chat-compose-card">
+                  <textarea
+                    className="chat-input"
+                    placeholder={token ? 'Write a reply or code solution...' : 'Login to reply in discussion'}
+                    value={replyContent}
+                    onChange={(e) => setReplyContent(e.target.value)}
+                    disabled={!token || submittingReply}
+                    style={{ minHeight: '70px' }}
+                  />
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '8px' }}>
+                    <button
+                      type="submit"
+                      className="btn-primary"
+                      style={{ padding: '7px 18px', fontSize: '0.82rem' }}
+                      disabled={!token || !replyContent.trim() || submittingReply}
+                    >
+                      <Send size={12} />
+                      <span>{submittingReply ? 'Mengirim...' : 'Reply'}</span>
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          ) : (
+            /* TOPIC FEED matching forum_preview.jpg */
+            <div>
+              {/* Feed Header */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px' }}>
+                <div>
+                  <h2 style={{ fontSize: '1.45rem', fontWeight: 800, color: '#fff', letterSpacing: '-0.3px' }}>
+                    Community Discussions
+                  </h2>
+                </div>
+
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  <span style={{ background: '#10b981', color: '#030712', fontSize: '0.75rem', fontWeight: 800, padding: '3px 10px', borderRadius: '16px' }}>
+                    Active threads
+                  </span>
+                  {token && (
+                    <button
+                      onClick={() => setShowCreateModal(true)}
+                      className="btn-primary"
+                      style={{ padding: '7px 16px', fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: '6px' }}
+                    >
+                      <Plus size={14} />
+                      <span>New Thread</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Discussions List matching photo */}
+              {loading ? (
+                <div className="app-card" style={{ padding: '40px', textAlign: 'center' }}>
+                  <p style={{ color: 'var(--text-secondary)' }}>Loading community threads...</p>
+                </div>
+              ) : displayedTopics.length === 0 ? (
+                <div className="app-card" style={{ padding: '48px 20px', textAlign: 'center' }}>
+                  <MessageSquare size={36} style={{ color: 'var(--text-tertiary)', marginBottom: '10px' }} />
+                  <h4 style={{ color: '#fff', fontSize: '1.05rem', fontWeight: 700, marginBottom: '4px' }}>No Discussions Found</h4>
+                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.84rem' }}>Be the first to start a conversation in this category!</p>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {displayedTopics.map((topic) => (
+                    <div
+                      key={topic.id}
+                      onClick={() => setSearchParams({ topic: String(topic.id) })}
+                      className="app-card highlight-hover animate-fade-in"
+                      style={{
+                        padding: '18px 20px',
+                        cursor: 'pointer',
+                        borderLeft: `3px solid ${getCategoryColor(topic.category)}`
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '14px' }}>
+                        <div style={{ flex: 1 }}>
+                          {/* Category Tag pill matching photo */}
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                            <span style={{
+                              fontSize: '0.7rem',
+                              padding: '2px 8px',
+                              borderRadius: '12px',
+                              background: `${getCategoryColor(topic.category)}20`,
+                              border: `1px solid ${getCategoryColor(topic.category)}50`,
+                              color: getCategoryColor(topic.category),
+                              fontWeight: 700
+                            }}>
+                              {topic.category}
+                            </span>
+                            <span style={{ fontSize: '0.74rem', color: 'var(--text-tertiary)' }}>
+                              {new Date(topic.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}
+                            </span>
+                          </div>
+
+                          <h3 style={{ fontSize: '1.12rem', fontWeight: 700, color: '#fff', marginBottom: '6px', lineHeight: '1.4' }}>
+                            {topic.title}
+                          </h3>
+
+                          {/* Author info */}
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.78rem', color: 'var(--text-tertiary)' }}>
+                            <div style={{
+                              width: '20px',
+                              height: '20px',
+                              borderRadius: '50%',
+                              background: 'linear-gradient(135deg, #10b981, #06b6d4)',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: '0.65rem',
+                              fontWeight: 800,
+                              color: '#040910'
+                            }}>
+                              {topic.author?.username?.charAt(0).toUpperCase()}
+                            </div>
+                            <span>{topic.author?.username}</span>
+                            <span>•</span>
+                            <span>Developer</span>
+                          </div>
+                        </div>
+
+                        {/* Reply count pill matching photo */}
+                        <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
+                          <div style={{ fontSize: '1.15rem', fontWeight: 800, color: '#fff' }}>
+                            {topic.replyCount}
+                          </div>
+                          <div style={{ fontSize: '0.72rem', color: 'var(--text-tertiary)' }}>replies</div>
+                        </div>
+                      </div>
                     </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Right Column: Active Discussions & Who's Online matching forum_preview.jpg */}
+        <aside style={{ display: 'flex', flexDirection: 'column', gap: '18px', position: 'sticky', top: '88px' }}>
+          {/* Active Discussions Card */}
+          <div className="app-card" style={{ padding: '18px' }}>
+            <h4 style={{ fontSize: '0.85rem', fontWeight: 700, color: '#fff', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <TrendingUp size={14} style={{ color: 'var(--emerald)' }} />
+              <span>Active Discussions</span>
+            </h4>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {topics.slice(0, 3).map((t) => (
+                <div
+                  key={t.id}
+                  onClick={() => setSearchParams({ topic: String(t.id) })}
+                  style={{ cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.04)', paddingBottom: '8px' }}
+                >
+                  <div style={{ fontSize: '0.82rem', fontWeight: 600, color: '#fff', lineHeight: '1.3', marginBottom: '3px' }}>
+                    {t.title}
+                  </div>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-tertiary)' }}>
+                    by @{t.author?.username} • {t.replyCount} replies
                   </div>
                 </div>
               ))}
             </div>
-          )}
-        </div>
-      )}
+          </div>
+
+          {/* Who's Online Card matching photo */}
+          <div className="app-card" style={{ padding: '18px' }}>
+            <h4 style={{ fontSize: '0.85rem', fontWeight: 700, color: '#fff', marginBottom: '12px' }}>
+              Who's Online
+            </h4>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              {['R', 'A', 'D', 'S', 'M'].map((letter, idx) => (
+                <div
+                  key={idx}
+                  style={{
+                    position: 'relative',
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '50%',
+                    background: `linear-gradient(135deg, ${idx % 2 === 0 ? '#10b981, #06b6d4' : '#3b82f6, #8b5cf6'})`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontWeight: 800,
+                    fontSize: '0.78rem',
+                    color: '#fff'
+                  }}
+                >
+                  {letter}
+                  <span style={{
+                    position: 'absolute',
+                    bottom: 0,
+                    right: 0,
+                    width: '7px',
+                    height: '7px',
+                    borderRadius: '50%',
+                    background: '#10b981',
+                    border: '1.5px solid #080c14'
+                  }} />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Live Chat Hub Info Box */}
+          <div className="app-card" style={{ padding: '16px', background: 'rgba(16, 185, 129, 0.04)', borderColor: 'rgba(16, 185, 129, 0.25)' }}>
+            <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#34d399', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Flame size={13} />
+              <span>Dev-Share Live Hub</span>
+            </div>
+            <p style={{ fontSize: '0.76rem', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
+              Share knowledge, solve coding problems, and connect with other developers worldwide.
+            </p>
+          </div>
+        </aside>
+      </div>
 
       {/* Create Topic Modal */}
       {showCreateModal && (
         <div className="modal-overlay" onClick={() => setShowCreateModal(false)}>
-          <div className="modal-content animate-fade-in" style={{ maxWidth: '600px' }} onClick={(e) => e.stopPropagation()}>
+          <div className="modal-content animate-fade-in" style={{ maxWidth: '580px' }} onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <Plus size={18} style={{ color: 'var(--emerald)' }} />
                 <h3 style={{ fontSize: '1.15rem', fontWeight: 700, color: '#fff' }}>Mulai Topik Diskusi Baru</h3>
               </div>
               <button onClick={() => setShowCreateModal(false)} className="modal-close-btn">
-                <X size={18} />
+                <X size={16} />
               </button>
             </div>
 
-            <form onSubmit={handleCreateTopic} style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <form onSubmit={handleCreateTopic} style={{ padding: '22px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <div>
-                <label style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>
+                <label style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: '5px' }}>
                   Kategori Diskusi
                 </label>
                 <select
@@ -665,20 +712,20 @@ export default function Forum() {
                   onChange={(e) => setNewCategory(e.target.value)}
                   style={{ fontSize: '0.88rem' }}
                 >
-                  <option value="Tanya Jawab">❓ Tanya Jawab & Debug Error</option>
-                  <option value="Tips & Trik">💡 Tips, Trik & Best Practice</option>
-                  <option value="Showcase">🚀 Showcase Project & Kode</option>
-                  <option value="Umum">💬 Diskusi Santai / Obrolan</option>
+                  <option value="Tanya Jawab">Q&A / Debug Error</option>
+                  <option value="Tips & Trik">Tips & Best Practice</option>
+                  <option value="Showcase">Showcase Project & Code</option>
+                  <option value="Umum">General Resources & Discussion</option>
                 </select>
               </div>
 
               <div>
-                <label style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>
+                <label style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: '5px' }}>
                   Judul Topik
                 </label>
                 <input
                   type="text"
-                  placeholder="Cth: Bagaimana cara optimasi database MySQL di Laravel/NodeJS?"
+                  placeholder="Cth: Optimizing React Performance with Concurrent Mode"
                   className="app-input"
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
@@ -688,21 +735,21 @@ export default function Forum() {
               </div>
 
               <div>
-                <label style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>
-                  Penjelasan / Kode / Pembahasan
+                <label style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: '5px' }}>
+                  Isi Pembahasan / Pertanyaan
                 </label>
                 <textarea
                   className="app-input"
-                  placeholder="Jelaskan pertanyaan atau topik diskusi secara lengkap..."
+                  placeholder="Tuliskan pertanyaan, konteks kode, atau topik yang ingin dibahas..."
                   value={newContent}
                   onChange={(e) => setNewContent(e.target.value)}
                   required
-                  rows={6}
+                  rows={5}
                   style={{ resize: 'vertical', fontSize: '0.88rem', lineHeight: '1.5' }}
                 />
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '10px' }}>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '8px' }}>
                 <button
                   type="button"
                   onClick={() => setShowCreateModal(false)}
@@ -714,10 +761,10 @@ export default function Forum() {
                 <button
                   type="submit"
                   className="btn-primary"
-                  style={{ padding: '8px 22px' }}
+                  style={{ padding: '8px 20px' }}
                   disabled={submittingTopic || !newTitle.trim() || !newContent.trim()}
                 >
-                  {submittingTopic ? 'Mempublikasikan...' : 'Publikasikan Topik'}
+                  {submittingTopic ? 'Mempublikasikan...' : 'Publikasikan'}
                 </button>
               </div>
             </form>

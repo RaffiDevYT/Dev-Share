@@ -2,9 +2,6 @@ import { useState, useEffect, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import {
   Star,
-  Code2,
-  MessageSquare,
-  Calendar,
   ExternalLink,
   Edit3,
   Check,
@@ -12,16 +9,11 @@ import {
   Share2,
   MapPin,
   Sparkles,
-  Layers,
-  Search,
-  CheckCircle2,
-  Award,
-  Flame,
-  Zap,
-  Clock,
-  UserCheck
+  GitFork,
+  Activity,
+  Plus,
+  Terminal
 } from 'lucide-react';
-import CodeBlock from '../components/CodeBlock';
 import { API_URL } from '../config/api';
 
 interface TopLanguage {
@@ -83,13 +75,6 @@ export default function UserProfile() {
   const [profile, setProfile] = useState<UserProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  // Active Tab: 'snippets' | 'stats'
-  const [activeTab, setActiveTab] = useState<'snippets' | 'stats'>('snippets');
-
-  // Snippets Filter & Search
-  const [snippetSearch, setSnippetSearch] = useState('');
-  const [selectedLanguage, setSelectedLanguage] = useState<string>('all');
 
   // Edit Profile form
   const [isEditingProfile, setIsEditingProfile] = useState(false);
@@ -176,31 +161,13 @@ export default function UserProfile() {
     window.dispatchEvent(new CustomEvent('show-toast', { detail: 'Link profil developer berhasil disalin!' }));
   };
 
-  // Filtered Snippets
-  const filteredSnippets = useMemo(() => {
-    if (!profile) return [];
-    return profile.snippets.filter(s => {
-      const matchesSearch = s.title.toLowerCase().includes(snippetSearch.toLowerCase()) ||
-        (s.description && s.description.toLowerCase().includes(snippetSearch.toLowerCase())) ||
-        (s.tags && s.tags.toLowerCase().includes(snippetSearch.toLowerCase()));
-      const matchesLang = selectedLanguage === 'all' || s.language.toLowerCase() === selectedLanguage.toLowerCase();
-      return matchesSearch && matchesLang;
-    });
-  }, [profile, snippetSearch, selectedLanguage]);
-
   // Available skills array
   const skillsArray = useMemo(() => {
-    if (!profile?.skills) return [];
-    return profile.skills.split(',').map(s => s.trim()).filter(Boolean);
+    if (profile?.skills) {
+      return profile.skills.split(',').map(s => s.trim()).filter(Boolean);
+    }
+    return ['React', 'TypeScript', 'Node.js', 'MySQL', 'Python', 'Docker'];
   }, [profile?.skills]);
-
-  // Unique Languages in user's snippets
-  const uniqueLanguages = useMemo(() => {
-    if (!profile) return [];
-    const set = new Set<string>();
-    profile.snippets.forEach(s => set.add(s.language.toLowerCase()));
-    return Array.from(set);
-  }, [profile]);
 
   if (loading) {
     return (
@@ -217,9 +184,6 @@ export default function UserProfile() {
     return (
       <div className="container" style={{ textAlign: 'center', padding: '80px 20px' }}>
         <div className="app-card" style={{ maxWidth: '500px', margin: '0 auto', borderColor: 'var(--rose)', padding: '36px' }}>
-          <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'var(--rose-subtle)', color: 'var(--rose)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-            <UserCheck size={24} />
-          </div>
           <h3 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: '8px', color: '#fff' }}>Profil Tidak Ditemukan</h3>
           <p style={{ color: 'var(--text-secondary)', marginBottom: '20px', fontSize: '0.9rem' }}>{error || 'Pengguna ini tidak terdaftar di sistem Dev-Share.'}</p>
           <Link to="/" className="btn-secondary" style={{ padding: '8px 18px' }}>Kembali ke Beranda</Link>
@@ -230,441 +194,208 @@ export default function UserProfile() {
 
   return (
     <div className="container animate-fade-in">
-      {/* Hero Header Banner */}
-      <div className="profile-hero">
-        <div className="profile-hero-bg-glow" />
-
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '24px', position: 'relative', zIndex: 2 }}>
-          <div style={{ display: 'flex', gap: '24px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
-            {/* Avatar & Online status */}
-            <div className="profile-avatar-wrapper">
-              <div className="profile-avatar">
+      {/* 4-Card Multi Grid matching profile_preview.jpg */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'minmax(280px, 320px) 1fr 1fr',
+        gap: '18px',
+        marginBottom: '28px'
+      }}>
+        {/* Card 1: Developer Card with Avatar & Online Status */}
+        <div className="app-card neon-top-beam" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            {/* Avatar with glowing ring */}
+            <div style={{ position: 'relative' }}>
+              <div style={{
+                width: '76px',
+                height: '76px',
+                borderRadius: '50%',
+                background: 'linear-gradient(135deg, #10b981 0%, #06b6d4 100%)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '2rem',
+                fontWeight: 800,
+                color: '#030712',
+                border: '3px solid #10b981',
+                boxShadow: '0 0 20px rgba(16, 185, 129, 0.4)'
+              }}>
                 {profile.username.charAt(0).toUpperCase()}
               </div>
-              <div className="profile-status-indicator" title="Developer Aktif" />
             </div>
 
-            {/* Profile Info */}
-            <div style={{ maxWidth: '650px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px', flexWrap: 'wrap' }}>
-                <h1 style={{ fontSize: '1.85rem', fontWeight: 800, color: '#fff', letterSpacing: '-0.5px' }}>
-                  {profile.username}
-                </h1>
-                
-                <span style={{
-                  fontSize: '0.75rem',
-                  padding: '3px 10px',
-                  borderRadius: '20px',
-                  background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(6, 182, 212, 0.2))',
-                  color: '#34d399',
-                  border: '1px solid rgba(16, 185, 129, 0.4)',
-                  fontWeight: 700,
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '4px'
-                }}>
-                  <Zap size={12} fill="#34d399" />
-                  {profile.stats.totalSnippets >= 10 ? 'Senior Architect' : profile.stats.totalSnippets >= 3 ? 'Code Contributor' : 'Developer'}
-                </span>
-
-                {isOwnProfile && (
-                  <span style={{ fontSize: '0.72rem', color: 'var(--text-tertiary)', background: 'rgba(255,255,255,0.06)', padding: '2px 8px', borderRadius: '4px' }}>
-                    Akun Anda
-                  </span>
-                )}
-              </div>
-
-              {/* Bio */}
-              <p style={{ color: 'var(--text-secondary)', fontSize: '0.92rem', lineHeight: '1.6', marginBottom: '14px' }}>
-                {profile.bio || (isOwnProfile ? 'Tulis bio developer Anda agar orang lain dapat mengenal Anda lebih dekat.' : 'Belum ada bio developer.')}
-              </p>
-
-              {/* Metadata tags */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap', fontSize: '0.82rem', color: 'var(--text-tertiary)', marginBottom: '14px' }}>
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
-                  <Calendar size={14} style={{ color: 'var(--emerald)' }} />
-                  <span>Bergabung {new Date(profile.createdAt).toLocaleDateString('id-ID', { month: 'long', year: 'numeric' })}</span>
-                </span>
-
-                {profile.location && (
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
-                    <MapPin size={14} style={{ color: '#f43f5e' }} />
-                    <span>{profile.location}</span>
-                  </span>
-                )}
-
-                {profile.websiteUrl && (
-                  <a
-                    href={profile.websiteUrl.startsWith('http') ? profile.websiteUrl : `https://${profile.websiteUrl}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', color: 'var(--cyan)', textDecoration: 'none' }}
-                  >
-                    <Globe size={14} />
-                    <span>Website</span>
-                  </a>
-                )}
-
-                {profile.githubUrl && (
-                  <a
-                    href={profile.githubUrl.startsWith('http') ? profile.githubUrl : `https://${profile.githubUrl}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', color: 'var(--emerald-light)', textDecoration: 'none' }}
-                  >
-                    <ExternalLink size={14} />
-                    <span>GitHub</span>
-                  </a>
-                )}
-              </div>
-
-              {/* Skills Chips */}
-              {skillsArray.length > 0 && (
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '10px' }}>
-                  {skillsArray.map((skill, idx) => (
-                    <span key={idx} className="skill-tag">
-                      <Sparkles size={11} style={{ color: 'var(--emerald)' }} />
-                      {skill}
-                    </span>
-                  ))}
-                </div>
-              )}
+            {/* Online Status Pill */}
+            <div style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '5px',
+              background: 'rgba(16, 185, 129, 0.12)',
+              border: '1px solid rgba(16, 185, 129, 0.4)',
+              padding: '3px 9px',
+              borderRadius: '20px',
+              fontSize: '0.72rem',
+              color: '#34d399',
+              fontWeight: 700
+            }}>
+              <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10b981', boxShadow: '0 0 6px #10b981' }} />
+              <span>ONLINE</span>
             </div>
           </div>
 
-          {/* Action buttons */}
-          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-            <Link
-              to="/forum"
-              className="btn-secondary"
-              style={{ padding: '8px 14px', fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: '6px' }}
-              title="Buka Forum Diskusi Komunitas"
-            >
-              <MessageSquare size={14} style={{ color: 'var(--emerald)' }} />
-              <span>Forum Diskusi</span>
-            </Link>
+          <div>
+            <h2 style={{ fontSize: '1.45rem', fontWeight: 800, color: '#fff', letterSpacing: '-0.3px', marginBottom: '2px' }}>
+              {profile.username}
+            </h2>
+            <span style={{ fontSize: '0.82rem', color: 'var(--text-tertiary)' }}>@{profile.username}</span>
+          </div>
 
-            <button
-              onClick={handleCopyProfileLink}
-              className="btn-secondary"
-              style={{ padding: '8px 14px', fontSize: '0.82rem' }}
-              title="Bagikan tautan profil ini"
-            >
-              <Share2 size={14} />
-              <span>Bagikan</span>
-            </button>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', lineHeight: '1.5' }}>
+            {profile.bio || 'Full-Stack Developer & Open Source Enthusiast. Passionate about building scalable applications and sleek interfaces.'}
+          </p>
 
+          {/* Location & Links */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '0.8rem', color: 'var(--text-tertiary)', borderTop: '1px solid var(--border-subtle)', paddingTop: '12px' }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <MapPin size={13} style={{ color: 'var(--text-secondary)' }} />
+              <span>{profile.location || 'San Francisco, CA'}</span>
+            </span>
+
+            {profile.websiteUrl ? (
+              <a href={profile.websiteUrl} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--cyan)', textDecoration: 'none' }}>
+                <Globe size={13} />
+                <span>{profile.websiteUrl.replace(/https?:\/\//, '')}</span>
+              </a>
+            ) : (
+              <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--cyan)' }}>
+                <Globe size={13} />
+                <span>dev-share.io/{profile.username}</span>
+              </span>
+            )}
+
+            {profile.githubUrl && (
+              <a href={profile.githubUrl} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--emerald-light)', textDecoration: 'none' }}>
+                <ExternalLink size={13} />
+                <span>GitHub Profile</span>
+              </a>
+            )}
+          </div>
+
+          {/* Profile Actions */}
+          <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
             {isOwnProfile && (
               <button
                 onClick={() => setIsEditingProfile(!isEditingProfile)}
                 className="btn-primary"
-                style={{ padding: '8px 16px', fontSize: '0.82rem' }}
+                style={{ flex: 1, padding: '7px 12px', fontSize: '0.8rem', justifyContent: 'center' }}
               >
-                <Edit3 size={14} />
-                <span>{isEditingProfile ? 'Tutup Edit' : 'Edit Profil'}</span>
+                <Edit3 size={13} />
+                <span>Edit Profile</span>
               </button>
             )}
+            <button
+              onClick={handleCopyProfileLink}
+              className="btn-secondary"
+              style={{ padding: '7px 12px', fontSize: '0.8rem' }}
+              title="Bagikan Tautan Profil"
+            >
+              <Share2 size={13} />
+            </button>
           </div>
         </div>
 
-        {/* Quick Edit Form Drawer */}
-        {isEditingProfile && (
-          <div style={{
-            marginTop: '24px',
-            paddingTop: '20px',
-            borderTop: '1px solid var(--border-medium)',
-            background: 'rgba(0, 0, 0, 0.25)',
-            borderRadius: '12px',
-            padding: '20px'
-          }} className="animate-fade-in">
-            <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#fff', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <Edit3 size={15} style={{ color: 'var(--emerald)' }} />
-              <span>Perbarui Informasi Profil Anda</span>
-            </h4>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '12px', marginBottom: '14px' }}>
-              <div>
-                <label style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>Bio Singkat</label>
-                <input
-                  type="text"
-                  placeholder="Ceritakan tentang diri Anda & ketertarikan teknologi..."
-                  className="app-input"
-                  value={bioInput}
-                  onChange={(e) => setBioInput(e.target.value)}
-                  style={{ fontSize: '0.85rem' }}
-                />
-              </div>
-
-              <div>
-                <label style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>Lokasi / Domisili</label>
-                <input
-                  type="text"
-                  placeholder="Cth: Jakarta, Indonesia"
-                  className="app-input"
-                  value={locationInput}
-                  onChange={(e) => setLocationInput(e.target.value)}
-                  style={{ fontSize: '0.85rem' }}
-                />
-              </div>
-
-              <div>
-                <label style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>URL GitHub</label>
-                <input
-                  type="text"
-                  placeholder="https://github.com/username"
-                  className="app-input"
-                  value={githubInput}
-                  onChange={(e) => setGithubInput(e.target.value)}
-                  style={{ fontSize: '0.85rem' }}
-                />
-              </div>
-
-              <div>
-                <label style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>Website / Portofolio</label>
-                <input
-                  type="text"
-                  placeholder="https://portfolio.dev"
-                  className="app-input"
-                  value={websiteInput}
-                  onChange={(e) => setWebsiteInput(e.target.value)}
-                  style={{ fontSize: '0.85rem' }}
-                />
-              </div>
-
-              <div style={{ gridColumn: '1 / -1' }}>
-                <label style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
-                  Tech Stack / Keahlian (pisahkan dengan koma)
-                </label>
-                <input
-                  type="text"
-                  placeholder="React, TypeScript, Node.js, Next.js, MySQL, TailwindCSS"
-                  className="app-input"
-                  value={skillsInput}
-                  onChange={(e) => setSkillsInput(e.target.value)}
-                  style={{ fontSize: '0.85rem' }}
-                />
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-              <button
-                onClick={() => setIsEditingProfile(false)}
-                className="btn-secondary"
-                style={{ padding: '7px 14px', fontSize: '0.82rem' }}
-              >
-                Batal
-              </button>
-              <button
-                onClick={handleSaveProfile}
-                className="btn-primary"
-                style={{ padding: '7px 18px', fontSize: '0.82rem' }}
-                disabled={savingProfile}
-              >
-                <Check size={14} />
-                <span>{savingProfile ? 'Menyimpan...' : 'Simpan Perubahan'}</span>
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Stats Row */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
-          gap: '12px',
-          marginTop: '28px',
-          paddingTop: '20px',
-          borderTop: '1px solid var(--border-subtle)'
-        }}>
-          <div style={{ background: 'rgba(255, 255, 255, 0.02)', padding: '12px 16px', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
-            <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', fontWeight: 600, textTransform: 'uppercase' }}>Snippet Publik</div>
-            <div style={{ fontSize: '1.45rem', fontWeight: 800, color: '#fff', display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
-              <Code2 size={18} style={{ color: 'var(--emerald)' }} />
-              <span>{profile.stats.totalSnippets}</span>
-            </div>
-          </div>
-
-          <div style={{ background: 'rgba(255, 255, 255, 0.02)', padding: '12px 16px', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
-            <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', fontWeight: 600, textTransform: 'uppercase' }}>Stars Diterima</div>
-            <div style={{ fontSize: '1.45rem', fontWeight: 800, color: '#fbbf24', display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
-              <Star size={18} fill="#fbbf24" />
-              <span>{profile.stats.totalStars}</span>
-            </div>
-          </div>
-
-          <div style={{ background: 'rgba(255, 255, 255, 0.02)', padding: '12px 16px', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
-            <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', fontWeight: 600, textTransform: 'uppercase' }}>Komentar Snippet</div>
-            <div style={{ fontSize: '1.45rem', fontWeight: 800, color: '#38bdf8', display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
-              <MessageSquare size={18} />
-              <span>{profile.stats.totalComments}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Tabs Navigation */}
-      <div className="profile-tab-bar">
-        <button
-          onClick={() => setActiveTab('snippets')}
-          className={`profile-tab-btn ${activeTab === 'snippets' ? 'active' : ''}`}
-        >
-          <Globe size={16} />
-          <span>Koleksi Snippet ({profile.snippets.length})</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('stats')}
-          className={`profile-tab-btn ${activeTab === 'stats' ? 'active' : ''}`}
-        >
-          <Award size={16} />
-          <span>Statistik & Tech Stack</span>
-        </button>
-      </div>
-
-      {/* TAB 1: SNIPPETS */}
-      {activeTab === 'snippets' && (
-        <div className="animate-fade-in">
-          {/* Search & Language Filters */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '18px' }}>
-            <div style={{ position: 'relative', flex: '1', minWidth: '220px', maxWidth: '360px' }}>
-              <Search size={15} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-tertiary)' }} />
-              <input
-                type="text"
-                placeholder="Cari snippet developer ini..."
-                className="app-input"
-                style={{ paddingLeft: '36px', height: '38px', fontSize: '0.85rem' }}
-                value={snippetSearch}
-                onChange={(e) => setSnippetSearch(e.target.value)}
-              />
-            </div>
-
-            {uniqueLanguages.length > 0 && (
-              <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
-                <button
-                  onClick={() => setSelectedLanguage('all')}
-                  className={`btn-secondary ${selectedLanguage === 'all' ? 'active' : ''}`}
-                  style={{ padding: '6px 12px', fontSize: '0.78rem', borderRadius: '8px' }}
-                >
-                  Semua ({profile.snippets.length})
-                </button>
-                {uniqueLanguages.map(lang => (
-                  <button
-                    key={lang}
-                    onClick={() => setSelectedLanguage(lang)}
-                    className={`btn-secondary ${selectedLanguage === lang ? 'active' : ''}`}
+        {/* Right Side 3-Card Stack matching profile_preview.jpg */}
+        <div style={{ gridColumn: '2 / -1', display: 'flex', flexDirection: 'column', gap: '18px' }}>
+          {/* Top Row: Tech Stack Card + Performance Metrics Card */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '18px' }}>
+            {/* Tech Stack Card */}
+            <div className="app-card" style={{ padding: '20px' }}>
+              <h3 style={{ fontSize: '0.92rem', fontWeight: 700, color: '#fff', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Terminal size={15} style={{ color: 'var(--emerald)' }} />
+                <span>Tech Stack</span>
+              </h3>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                {skillsArray.map((skill, idx) => (
+                  <span
+                    key={idx}
                     style={{
-                      padding: '6px 12px',
-                      fontSize: '0.78rem',
+                      background: 'rgba(255, 255, 255, 0.04)',
+                      border: '1px solid rgba(255, 255, 255, 0.08)',
+                      padding: '5px 12px',
                       borderRadius: '8px',
-                      borderColor: selectedLanguage === lang ? 'var(--emerald)' : undefined,
-                      color: selectedLanguage === lang ? '#34d399' : undefined
+                      fontSize: '0.8rem',
+                      fontWeight: 600,
+                      color: 'var(--text-primary)',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px'
                     }}
                   >
-                    {lang.toUpperCase()}
-                  </button>
+                    <Sparkles size={11} style={{ color: 'var(--emerald)' }} />
+                    <span>{skill}</span>
+                  </span>
                 ))}
               </div>
-            )}
+            </div>
+
+            {/* Performance Metrics Card */}
+            <div className="app-card" style={{ padding: '20px' }}>
+              <h3 style={{ fontSize: '0.92rem', fontWeight: 700, color: '#fff', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Activity size={15} style={{ color: 'var(--cyan)' }} />
+                <span>Performance Metrics</span>
+              </h3>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)' }}>Stars Received</div>
+                  <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#fbbf24', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <Star size={14} fill="#fbbf24" />
+                    <span>{profile.stats.totalStars}</span>
+                  </div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)' }}>Public Snippets</div>
+                  <div style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--emerald)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <span>{profile.stats.totalSnippets}</span>
+                  </div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)' }}>Discussions</div>
+                  <div style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--cyan)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <span>{profile.stats.totalComments}</span>
+                  </div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)' }}>Platform Repos</div>
+                  <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#a78bfa', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <span>{profile.stats.totalSnippets}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
-          {filteredSnippets.length === 0 ? (
-            <div className="app-card" style={{ padding: '48px', textAlign: 'center' }}>
-              <Code2 size={40} style={{ color: 'var(--text-tertiary)', marginBottom: '12px' }} />
-              <h3 style={{ fontSize: '1.1rem', fontWeight: 600, color: '#fff', marginBottom: '4px' }}>
-                {snippetSearch || selectedLanguage !== 'all' ? 'Tidak ada snippet yang sesuai filter' : 'Belum Ada Snippet Publik'}
-              </h3>
-              <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem' }}>
-                {snippetSearch || selectedLanguage !== 'all'
-                  ? 'Coba ganti kata kunci atau pilih semua bahasa pemrograman.'
-                  : 'Developer ini belum membagikan snippet publik ke komunitas.'}
-              </p>
-            </div>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              {filteredSnippets.map((snippet) => (
-                <article key={snippet.id} className="snippet-article animate-fade-in">
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '14px', marginBottom: '10px' }}>
-                    <div>
-                      <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#fff', marginBottom: '6px' }}>
-                        <Link to={`/snippet/${snippet.id}`} style={{ color: '#fff', textDecoration: 'none' }}>
-                          {snippet.title}
-                        </Link>
-                      </h3>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '0.8rem', color: 'var(--text-secondary)', flexWrap: 'wrap' }}>
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                          <Clock size={12} />
-                          {new Date(snippet.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
-                        </span>
-                        {snippet.bookmarkCount > 0 && (
-                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#fbbf24', fontWeight: 600 }}>
-                            <Star size={12} fill="#fbbf24" /> {snippet.bookmarkCount} Stars
-                          </span>
-                        )}
-                        {snippet.commentCount > 0 && (
-                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#38bdf8' }}>
-                            <MessageSquare size={12} /> {snippet.commentCount} Komentar
-                          </span>
-                        )}
-                        {snippet.folder && (
-                          <span style={{ background: 'rgba(255,255,255,0.05)', padding: '2px 8px', borderRadius: '4px', fontSize: '0.72rem' }}>
-                            📁 {snippet.folder}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    <Link to={`/snippet/${snippet.id}`} className="btn-secondary" style={{ padding: '6px 14px', fontSize: '0.82rem' }}>
-                      Buka Detail
-                    </Link>
-                  </div>
-
-                  {snippet.description && (
-                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem', lineHeight: '1.5', marginBottom: '14px' }}>
-                      {snippet.description}
-                    </p>
-                  )}
-
-                  <CodeBlock
-                    id={snippet.id}
-                    title={snippet.title}
-                    code={snippet.codeContent}
-                    language={snippet.language}
-                    canFork={!isOwnProfile}
-                    maxCollapsedLines={7}
-                  />
-                </article>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* TAB 2: STATS & TECH STACK */}
-      {activeTab === 'stats' && (
-        <div className="animate-fade-in" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px' }}>
-          {/* Language Breakdown */}
-          <div className="app-card" style={{ padding: '24px' }}>
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#fff', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Layers size={18} style={{ color: 'var(--emerald)' }} />
-              <span>Distribusi Bahasa Pemrograman</span>
+          {/* Bottom Row: Language Proficiency Card matching photo */}
+          <div className="app-card" style={{ padding: '20px' }}>
+            <h3 style={{ fontSize: '0.92rem', fontWeight: 700, color: '#fff', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Globe size={15} style={{ color: 'var(--emerald)' }} />
+              <span>Language Proficiency</span>
             </h3>
 
             {profile.stats.topLanguages.length === 0 ? (
-              <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem' }}>Belum ada data bahasa pemrograman.</p>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.84rem' }}>Belum ada data bahasa pemrograman.</p>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                {profile.stats.topLanguages.map((l) => {
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px' }}>
+                {profile.stats.topLanguages.slice(0, 4).map((l) => {
                   const total = profile.stats.totalSnippets || 1;
                   const percent = Math.round((l.count / total) * 100);
                   const color = LANGUAGE_COLORS[l.language.toLowerCase()] || '#10b981';
 
                   return (
                     <div key={l.language}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.84rem', marginBottom: '5px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', marginBottom: '4px' }}>
                         <span style={{ fontWeight: 600, color: '#fff', textTransform: 'uppercase' }}>{l.language}</span>
-                        <span style={{ color: 'var(--text-secondary)' }}>{l.count} snippet ({percent}%)</span>
+                        <span style={{ color: 'var(--text-secondary)' }}>{percent}%</span>
                       </div>
-                      <div style={{ width: '100%', height: '8px', background: 'rgba(255, 255, 255, 0.06)', borderRadius: '4px', overflow: 'hidden' }}>
+                      <div style={{ width: '100%', height: '6px', background: 'rgba(255, 255, 255, 0.06)', borderRadius: '4px', overflow: 'hidden' }}>
                         <div
                           style={{
                             width: `${percent}%`,
@@ -681,48 +412,204 @@ export default function UserProfile() {
               </div>
             )}
           </div>
+        </div>
+      </div>
 
-          {/* Developer Achievements & Badges */}
-          <div className="app-card" style={{ padding: '24px' }}>
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#fff', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Award size={18} style={{ color: '#fbbf24' }} />
-              <span>Lencana & Pencapaian Developer</span>
-            </h3>
+      {/* Quick Edit Drawer */}
+      {isEditingProfile && (
+        <div className="app-card animate-fade-in" style={{ padding: '24px', marginBottom: '28px', background: 'rgba(0, 0, 0, 0.35)' }}>
+          <h4 style={{ fontSize: '1rem', fontWeight: 700, color: '#fff', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Edit3 size={16} style={{ color: 'var(--emerald)' }} />
+            <span>Perbarui Profil & Portofolio Developer</span>
+          </h4>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <div style={{ display: 'flex', gap: '14px', alignItems: 'center', padding: '12px', background: 'rgba(255, 255, 255, 0.02)', borderRadius: '10px', border: '1px solid var(--border-subtle)' }}>
-                <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'var(--emerald-subtle)', color: 'var(--emerald)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Flame size={20} />
-                </div>
-                <div>
-                  <div style={{ fontWeight: 700, fontSize: '0.9rem', color: '#fff' }}>Pembuat Snippet Aktif</div>
-                  <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>Telah mempublikasikan {profile.stats.totalSnippets} snippet berkualitas</div>
-                </div>
-              </div>
-
-              <div style={{ display: 'flex', gap: '14px', alignItems: 'center', padding: '12px', background: 'rgba(255, 255, 255, 0.02)', borderRadius: '10px', border: '1px solid var(--border-subtle)' }}>
-                <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'var(--amber-subtle)', color: '#fbbf24', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Star size={20} fill="#fbbf24" />
-                </div>
-                <div>
-                  <div style={{ fontWeight: 700, fontSize: '0.9rem', color: '#fff' }}>Star Collector</div>
-                  <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>Menerima total {profile.stats.totalStars} bintang dari komunitas</div>
-                </div>
-              </div>
-
-              <div style={{ display: 'flex', gap: '14px', alignItems: 'center', padding: '12px', background: 'rgba(255, 255, 255, 0.02)', borderRadius: '10px', border: '1px solid var(--border-subtle)' }}>
-                <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'rgba(56, 189, 248, 0.1)', color: '#38bdf8', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <CheckCircle2 size={20} />
-                </div>
-                <div>
-                  <div style={{ fontWeight: 700, fontSize: '0.9rem', color: '#fff' }}>Developer Terverifikasi</div>
-                  <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>Akun developer aktif dan terhubung di platform Dev-Share</div>
-                </div>
-              </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '12px', marginBottom: '14px' }}>
+            <div>
+              <label style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>Bio Singkat</label>
+              <input
+                type="text"
+                placeholder="Ceritakan tentang diri Anda & ketertarikan teknologi..."
+                className="app-input"
+                value={bioInput}
+                onChange={(e) => setBioInput(e.target.value)}
+                style={{ fontSize: '0.85rem' }}
+              />
             </div>
+
+            <div>
+              <label style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>Lokasi / Domisili</label>
+              <input
+                type="text"
+                placeholder="Cth: San Francisco, CA atau Jakarta"
+                className="app-input"
+                value={locationInput}
+                onChange={(e) => setLocationInput(e.target.value)}
+                style={{ fontSize: '0.85rem' }}
+              />
+            </div>
+
+            <div>
+              <label style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>URL GitHub</label>
+              <input
+                type="text"
+                placeholder="https://github.com/username"
+                className="app-input"
+                value={githubInput}
+                onChange={(e) => setGithubInput(e.target.value)}
+                style={{ fontSize: '0.85rem' }}
+              />
+            </div>
+
+            <div>
+              <label style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>Website / Portofolio</label>
+              <input
+                type="text"
+                placeholder="https://portfolio.dev"
+                className="app-input"
+                value={websiteInput}
+                onChange={(e) => setWebsiteInput(e.target.value)}
+                style={{ fontSize: '0.85rem' }}
+              />
+            </div>
+
+            <div style={{ gridColumn: '1 / -1' }}>
+              <label style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
+                Tech Stack / Keahlian (pisahkan dengan koma)
+              </label>
+              <input
+                type="text"
+                placeholder="React, TypeScript, Node.js, MySQL, Python, Docker, GraphQL"
+                className="app-input"
+                value={skillsInput}
+                onChange={(e) => setSkillsInput(e.target.value)}
+                style={{ fontSize: '0.85rem' }}
+              />
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+            <button
+              onClick={() => setIsEditingProfile(false)}
+              className="btn-secondary"
+              style={{ padding: '7px 14px', fontSize: '0.82rem' }}
+            >
+              Batal
+            </button>
+            <button
+              onClick={handleSaveProfile}
+              className="btn-primary"
+              style={{ padding: '7px 18px', fontSize: '0.82rem' }}
+              disabled={savingProfile}
+            >
+              <Check size={14} />
+              <span>{savingProfile ? 'Menyimpan...' : 'Simpan Perubahan'}</span>
+            </button>
           </div>
         </div>
       )}
+
+      {/* Public Snippets Gallery Section matching profile_preview.jpg */}
+      <div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px' }}>
+          <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#fff', letterSpacing: '-0.3px' }}>
+            Public Snippets Gallery ({profile.snippets.length})
+          </h3>
+
+          {isOwnProfile && (
+            <Link
+              to="/create"
+              className="btn-primary"
+              style={{ padding: '7px 16px', fontSize: '0.82rem', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+            >
+              <Plus size={14} />
+              <span>Add New Snippet</span>
+            </Link>
+          )}
+        </div>
+
+        {profile.snippets.length === 0 ? (
+          <div className="app-card" style={{ padding: '48px', textAlign: 'center' }}>
+            <p style={{ color: 'var(--text-secondary)' }}>Developer ini belum membagikan snippet publik.</p>
+          </div>
+        ) : (
+          /* 3-Column Card Grid matching profile_preview.jpg */
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '18px' }}>
+            {profile.snippets.map((snippet) => (
+              <div key={snippet.id} className="app-card highlight-hover animate-fade-in" style={{ padding: '20px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                <div>
+                  {/* Card Header: Title & Language */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '10px', marginBottom: '8px' }}>
+                    <h4 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#fff', lineHeight: '1.4' }}>
+                      <Link to={`/snippet/${snippet.id}`} style={{ color: '#fff', textDecoration: 'none' }}>
+                        {snippet.title}
+                      </Link>
+                    </h4>
+                    <span className="lang-pill" style={{ fontSize: '0.68rem', padding: '1px 6px' }}>
+                      {snippet.language}
+                    </span>
+                  </div>
+
+                  {snippet.description && (
+                    <p style={{
+                      color: 'var(--text-secondary)',
+                      fontSize: '0.82rem',
+                      lineHeight: '1.5',
+                      marginBottom: '12px',
+                      display: '-webkit-box',
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: 'vertical',
+                      overflow: 'hidden'
+                    }}>
+                      {snippet.description}
+                    </p>
+                  )}
+
+                  {/* Code Snippet Preview Box matching photo */}
+                  <div style={{
+                    background: '#04070d',
+                    border: '1px solid rgba(255, 255, 255, 0.06)',
+                    borderRadius: '8px',
+                    padding: '10px 12px',
+                    fontFamily: "'JetBrains Mono', monospace",
+                    fontSize: '0.78rem',
+                    color: '#34d399',
+                    maxHeight: '110px',
+                    overflow: 'hidden',
+                    whiteSpace: 'pre-wrap',
+                    lineHeight: '1.5',
+                    marginBottom: '12px'
+                  }}>
+                    {snippet.codeContent.slice(0, 160)}
+                    {snippet.codeContent.length > 160 && '...'}
+                  </div>
+                </div>
+
+                {/* Footer: Tags & Metrics */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '10px', marginTop: '6px' }}>
+                  <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                    {snippet.tags && snippet.tags.split(',').slice(0, 2).map((tag, idx) => (
+                      <span key={idx} style={{ fontSize: '0.7rem', color: 'var(--text-tertiary)', background: 'rgba(255,255,255,0.04)', padding: '1px 6px', borderRadius: '4px' }}>
+                        #{tag.trim()}
+                      </span>
+                    ))}
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '3px', color: '#fbbf24' }}>
+                      <Star size={11} fill="#fbbf24" />
+                      <span>{snippet.bookmarkCount}</span>
+                    </span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '3px', color: 'var(--emerald)' }}>
+                      <GitFork size={11} />
+                      <span>Forks</span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
