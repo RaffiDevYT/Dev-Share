@@ -774,25 +774,70 @@ export default function Forum() {
               border: '1px solid rgba(255, 255, 255, 0.06)',
               borderRadius: '12px',
               padding: '12px',
-              minHeight: '80px',
+              minHeight: '110px',
+              maxHeight: '140px',
+              overflowY: 'auto',
               display: 'flex',
               flexDirection: 'column',
-              justifyContent: 'flex-end'
+              justifyContent: 'flex-end',
+              gap: '6px',
+              marginBottom: '8px'
             }}>
+              <div style={{ fontSize: '0.74rem', color: 'var(--text-tertiary)', textAlign: 'center', marginBottom: '4px' }}>
+                🟢 Live Hub Connected
+              </div>
+              <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
+                <strong style={{ color: '#10b981' }}>Alex:</strong> Welcome to Dev-Share discussions!
+              </div>
+              {liveChatMessage && (
+                <div style={{ fontSize: '0.78rem', color: '#fff' }}>
+                  <strong style={{ color: 'var(--cyan)' }}>{currentUsername || 'You'}:</strong> {liveChatMessage}
+                </div>
+              )}
+            </div>
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (liveChatMessage.trim()) {
+                  window.dispatchEvent(new CustomEvent('show-toast', { detail: `Pesan chat terkirim: "${liveChatMessage.trim()}"` }));
+                  setLiveChatMessage('');
+                }
+              }}
+              style={{ display: 'flex', gap: '6px' }}
+            >
               <input
                 type="text"
-                placeholder="Live out here..."
+                placeholder="Live out here... (Enter to send)"
                 value={liveChatMessage}
                 onChange={(e) => setLiveChatMessage(e.target.value)}
                 style={{
-                  background: 'transparent',
-                  border: 'none',
+                  flex: 1,
+                  background: 'rgba(255, 255, 255, 0.04)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  borderRadius: '8px',
+                  padding: '6px 10px',
                   outline: 'none',
                   color: '#fff',
-                  fontSize: '0.85rem'
+                  fontSize: '0.82rem'
                 }}
               />
-            </div>
+              <button
+                type="submit"
+                style={{
+                  background: '#10b981',
+                  border: 'none',
+                  borderRadius: '8px',
+                  padding: '6px 12px',
+                  color: '#040910',
+                  fontWeight: 800,
+                  fontSize: '0.78rem',
+                  cursor: 'pointer'
+                }}
+              >
+                Send
+              </button>
+            </form>
           </div>
         </aside>
       </div>

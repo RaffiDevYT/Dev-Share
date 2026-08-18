@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import {
   Bookmark,
   Layers,
@@ -11,8 +11,14 @@ import {
   Copy,
   Star,
   Check,
-  Terminal
+  Terminal,
+  Sparkles,
+  Camera,
+  Share2
 } from 'lucide-react';
+import ExportImageModal from '../components/ExportImageModal';
+import AIAssistantModal from '../components/AIAssistantModal';
+import EmbedModal from '../components/EmbedModal';
 import { API_URL } from '../config/api';
 
 interface Snippet {
@@ -33,12 +39,14 @@ interface Snippet {
 }
 
 export default function PublicSnippets() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const searchUrlParam = searchParams.get('search') || '';
+
   const [snippets, setSnippets] = useState<Snippet[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   // Filters
-  const [searchTerm] = useState('');
   const [selectedTag, setSelectedTag] = useState('');
   const [activeSidebarItem, setActiveSidebarItem] = useState<'all' | 'my' | 'saved' | 'drafts' | 'recent'>('all');
 
@@ -46,6 +54,12 @@ export default function PublicSnippets() {
   const [runningSnippetId, setRunningSnippetId] = useState<number | null>(null);
   const [consoleOutputs, setConsoleOutputs] = useState<Record<number, string>>({});
   const [copiedSnippetId, setCopiedSnippetId] = useState<number | null>(null);
+
+  // Modals for AI, PNG Export, Embed
+  const [activeModalSnippet, setActiveModalSnippet] = useState<Snippet | null>(null);
+  const [showAIModal, setShowAIModal] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [showEmbedModal, setShowEmbedModal] = useState(false);
 
   const currentUserId = localStorage.getItem('userId') ? parseInt(localStorage.getItem('userId')!) : null;
   const token = localStorage.getItem('token');
@@ -89,7 +103,6 @@ export default function PublicSnippets() {
         logs.push(args.map(a => (typeof a === 'object' ? JSON.stringify(a) : String(a))).join(' '));
       };
 
-      // Safe evaluation
       try {
         const result = new Function(code)();
         if (result !== undefined) logs.push(String(result));
@@ -100,7 +113,7 @@ export default function PublicSnippets() {
       console.log = originalLog;
       setConsoleOutputs(prev => ({
         ...prev,
-        [snippetId]: logs.length > 0 ? logs.join('\n') : 'Hello World!'
+        [snippetId]: logs.length > 0 ? logs.join('\n') : '✓ Selesai dieksekusi tanpa error.'
       }));
     } catch (e: any) {
       setConsoleOutputs(prev => ({
@@ -142,6 +155,9 @@ export default function PublicSnippets() {
           }
           return s;
         }));
+        window.dispatchEvent(new CustomEvent('show-toast', {
+          detail: data.isBookmarked ? 'Snippet ditambahkan ke Bookmark!' : 'Bookmark dihapus'
+        }));
       }
     } catch (e) {
       console.error(e);
@@ -149,32 +165,42 @@ export default function PublicSnippets() {
   };
 
   const popularTagsList = useMemo(() => {
-    const list = ['React', 'JavaScript', 'CSS', 'Tailwind', 'Component', 'Node.js', 'Python', 'MySQL'];
-    return list;
+    return ['React', 'JavaScript', 'CSS', 'Tailwind', 'Component', 'Node.js', 'Python', 'MySQL', 'TypeScript'];
   }, []);
 
-  const filteredSnippets = snippets.filter(snippet => {
-    const term = searchTerm.toLowerCase();
-    const matchesSearch =
-      snippet.title.toLowerCase().includes(term) ||
-      (snippet.description && snippet.description.toLowerCase().includes(term)) ||
-      (snippet.tags && snippet.tags.toLowerCase().includes(term)) ||
-      snippet.codeContent.toLowerCase().includes(term);
+  const filteredSnippets = useMemo(() => {
+    let result = snippets.filter(snippet => {
+      const term = searchUrlParam.toLowerCase();
+      const matchesSearch =
+        !term ||
+        snippet.title.toLowerCase().includes(term) ||
+        (snippet.description && snippet.description.toLowerCase().includes(term)) ||
+        (snippet.tags && snippet.tags.toLowerCase().includes(term)) ||
+        snippet.codeContent.toLowerCase().includes(term);
 
-    const matchesTag = selectedTag === '' || (snippet.tags && snippet.tags.toLowerCase().includes(selectedTag.toLowerCase()));
+      const matchesTag = selectedTag === '' || (snippet.tags && snippet.tags.toLowerCase().includes(selectedTag.toLowerCase()));
 
-    let matchesSidebar = true;
-    if (activeSidebarItem === 'my') {
-      matchesSidebar = snippet.userId === currentUserId;
-    } else if (activeSidebarItem === 'saved') {
-      matchesSidebar = !!snippet.isBookmarked;
+      let matchesSidebar = true;
+      if (activeSidebarItem === 'my') {
+        matchesSidebar = snippet.userId === currentUserId;
+      } else if (activeSidebarItem === 'saved') {
+        matchesSidebar = !!snippet.isBookmarked;
+      } else if (activeSidebarItem === 'drafts') {
+        matchesSidebar = !snippet.isPublic && snippet.userId === currentUserId;
+      }
+
+      return matchesSearch && matchesTag && matchesSidebar;
+    });
+
+    if (activeSidebarItem === 'recent') {
+      result = [...result].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     }
 
-    return matchesSearch && matchesTag && matchesSidebar;
-  });
+    return result;
+  }, [snippets, searchUrlParam, selectedTag, activeSidebarItem, currentUserId]);
 
   return (
-    <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '24px 28px' }} className="animate-fade-in">
+    <div style={{ maxWidth: '1440px', margin: '0 auto', padding: '24px 28px' }} className="animate-fade-in">
       {/* 2-Column Photo 1 Layout: Left Sidebar + Right Main Workspace */}
       <div style={{ display: 'grid', gridTemplateColumns: '240px 1fr', gap: '32px', alignItems: 'start' }}>
         {/* Left Sidebar matching photo 1 */}
@@ -183,12 +209,23 @@ export default function PublicSnippets() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginBottom: '28px' }}>
             <button
               type="button"
-              onClick={() => { setActiveSidebarItem('my'); setSelectedTag(''); }}
-              className={`sidebar-nav-item ${activeSidebarItem === 'my' ? 'active' : ''}`}
+              onClick={() => { setActiveSidebarItem('all'); setSelectedTag(''); setSearchParams({}); }}
+              className={`sidebar-nav-item ${activeSidebarItem === 'all' && !selectedTag ? 'active' : ''}`}
             >
               <Layers size={16} />
-              <span>My Snippets</span>
+              <span>All Snippets</span>
             </button>
+
+            {token && (
+              <button
+                type="button"
+                onClick={() => { setActiveSidebarItem('my'); setSelectedTag(''); }}
+                className={`sidebar-nav-item ${activeSidebarItem === 'my' ? 'active' : ''}`}
+              >
+                <Code2 size={16} />
+                <span>My Snippets</span>
+              </button>
+            )}
 
             <button
               type="button"
@@ -199,14 +236,16 @@ export default function PublicSnippets() {
               <span>Saved</span>
             </button>
 
-            <button
-              type="button"
-              onClick={() => { setActiveSidebarItem('drafts'); setSelectedTag(''); }}
-              className={`sidebar-nav-item ${activeSidebarItem === 'drafts' ? 'active' : ''}`}
-            >
-              <FileText size={16} />
-              <span>Drafts</span>
-            </button>
+            {token && (
+              <button
+                type="button"
+                onClick={() => { setActiveSidebarItem('drafts'); setSelectedTag(''); }}
+                className={`sidebar-nav-item ${activeSidebarItem === 'drafts' ? 'active' : ''}`}
+              >
+                <FileText size={16} />
+                <span>Drafts</span>
+              </button>
+            )}
 
             <button
               type="button"
@@ -224,12 +263,12 @@ export default function PublicSnippets() {
               <span style={{ fontSize: '0.82rem', color: 'var(--text-tertiary)', fontWeight: 500 }}>
                 popular tags
               </span>
-              {selectedTag && (
+              {(selectedTag || searchUrlParam) && (
                 <button
-                  onClick={() => setSelectedTag('')}
-                  style={{ background: 'none', border: 'none', color: '#10b981', fontSize: '0.74rem', cursor: 'pointer' }}
+                  onClick={() => { setSelectedTag(''); setSearchParams({}); }}
+                  style={{ background: 'none', border: 'none', color: '#10b981', fontSize: '0.74rem', cursor: 'pointer', fontWeight: 600 }}
                 >
-                  Clear
+                  Clear Filter
                 </button>
               )}
             </div>
@@ -253,7 +292,7 @@ export default function PublicSnippets() {
         </aside>
 
         {/* Right Main Content Area matching photo 1 */}
-        <main style={{ display: 'flex', flexDirection: 'column', gap: '36px' }}>
+        <main style={{ display: 'flex', flexDirection: 'column', gap: '40px' }}>
           {loading ? (
             <div className="app-card" style={{ padding: '60px', textAlign: 'center' }}>
               <div className="animate-spin" style={{ width: '36px', height: '36px', border: '3px solid rgba(16, 185, 129, 0.2)', borderTopColor: 'var(--emerald)', borderRadius: '50%', margin: '0 auto 12px' }} />
@@ -268,9 +307,11 @@ export default function PublicSnippets() {
             <div className="app-card" style={{ padding: '60px', textAlign: 'center' }}>
               <Code2 size={40} style={{ color: 'var(--text-tertiary)', marginBottom: '12px' }} />
               <h3 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: '6px', color: '#fff' }}>Tidak Ada Snippet</h3>
-              <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem', marginBottom: '18px' }}>Tidak ada cuplikan kode pada kategori yang dipilih.</p>
-              <button onClick={() => { setSelectedTag(''); setActiveSidebarItem('all'); }} className="btn-secondary">
-                Lihat Semua
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem', marginBottom: '18px' }}>
+                {searchUrlParam ? `Tidak ada snippet yang sesuai dengan pencarian "${searchUrlParam}".` : 'Tidak ada cuplikan kode pada filter yang dipilih.'}
+              </p>
+              <button onClick={() => { setSelectedTag(''); setActiveSidebarItem('all'); setSearchParams({}); }} className="btn-secondary">
+                Lihat Semua Snippet
               </button>
             </div>
           ) : (
@@ -281,7 +322,7 @@ export default function PublicSnippets() {
               return (
                 <div key={snippet.id} className="animate-fade-in" style={{ background: 'transparent' }}>
                   {/* Big Snippet Title */}
-                  <h1 style={{ fontSize: '1.85rem', fontWeight: 800, color: '#fff', letterSpacing: '-0.4px', marginBottom: '12px' }}>
+                  <h1 style={{ fontSize: '1.85rem', fontWeight: 800, color: '#fff', letterSpacing: '-0.4px', marginBottom: '10px' }}>
                     <Link to={`/snippet/${snippet.id}`} style={{ color: '#fff', textDecoration: 'none' }}>
                       {snippet.title}
                     </Link>
@@ -336,11 +377,13 @@ export default function PublicSnippets() {
                     </div>
 
                     {/* Right side stats matching photo 1 */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.82rem', color: 'var(--text-tertiary)' }}>
-                      <Eye size={14} />
-                      <span>1.2k views</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.82rem', color: 'var(--text-tertiary)' }}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <Eye size={14} />
+                        <span>1.2k views</span>
+                      </span>
                       <span>•</span>
-                      <span>2 hours ago</span>
+                      <span>{new Date(snippet.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}</span>
                     </div>
                   </div>
 
@@ -426,6 +469,43 @@ export default function PublicSnippets() {
                           {snippet.bookmarkCount ? snippet.bookmarkCount + 480 : 485}
                         </span>
                       </button>
+
+                      {/* AI Assistant Button */}
+                      <button
+                        onClick={() => { setActiveModalSnippet(snippet); setShowAIModal(true); }}
+                        className="action-btn-stat"
+                        style={{ color: '#a5b4fc', borderColor: 'rgba(99, 102, 241, 0.3)' }}
+                        title="Analisis & Optimasi dengan AI"
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <Sparkles size={14} />
+                          <span>AI Explainer</span>
+                        </div>
+                      </button>
+
+                      {/* PNG Export Button */}
+                      <button
+                        onClick={() => { setActiveModalSnippet(snippet); setShowExportModal(true); }}
+                        className="action-btn-stat"
+                        title="Ekspor ke Gambar PNG (Ray.so style)"
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <Camera size={14} />
+                          <span>Export PNG</span>
+                        </div>
+                      </button>
+
+                      {/* Embed Button */}
+                      <button
+                        onClick={() => { setActiveModalSnippet(snippet); setShowEmbedModal(true); }}
+                        className="action-btn-stat"
+                        title="Sematkan Embed / Dapatkan Raw URL"
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <Share2 size={14} />
+                          <span>Embed / Raw</span>
+                        </div>
+                      </button>
                     </div>
                   </div>
 
@@ -436,7 +516,13 @@ export default function PublicSnippets() {
                         <Terminal size={13} style={{ color: '#10b981' }} />
                         <span>Console</span>
                       </div>
-                      <span style={{ cursor: 'pointer', color: 'var(--text-tertiary)' }}>•••</span>
+                      <span
+                        onClick={() => setConsoleOutputs(prev => ({ ...prev, [snippet.id]: 'Console cleared' }))}
+                        style={{ cursor: 'pointer', color: 'var(--text-tertiary)', fontSize: '0.75rem' }}
+                        title="Clear console"
+                      >
+                        Clear
+                      </span>
                     </div>
                     <div className="console-body">
                       {consoleOutput}
@@ -448,6 +534,34 @@ export default function PublicSnippets() {
           )}
         </main>
       </div>
+
+      {/* AI Assistant Modal */}
+      {showAIModal && activeModalSnippet && (
+        <AIAssistantModal
+          code={activeModalSnippet.codeContent}
+          language={activeModalSnippet.language}
+          onClose={() => { setShowAIModal(false); setActiveModalSnippet(null); }}
+        />
+      )}
+
+      {/* Export PNG Modal */}
+      {showExportModal && activeModalSnippet && (
+        <ExportImageModal
+          title={activeModalSnippet.title}
+          code={activeModalSnippet.codeContent}
+          language={activeModalSnippet.language}
+          onClose={() => { setShowExportModal(false); setActiveModalSnippet(null); }}
+        />
+      )}
+
+      {/* Embed Modal */}
+      {showEmbedModal && activeModalSnippet && (
+        <EmbedModal
+          id={activeModalSnippet.id}
+          title={activeModalSnippet.title}
+          onClose={() => { setShowEmbedModal(false); setActiveModalSnippet(null); }}
+        />
+      )}
     </div>
   );
 }

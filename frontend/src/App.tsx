@@ -17,6 +17,7 @@ function NavHeader() {
   const location = useLocation();
   const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
   const [username, setUsername] = useState<string | null>(localStorage.getItem('username'));
+  const [headerSearchQuery, setHeaderSearchQuery] = useState('');
 
   useEffect(() => {
     const handleAuthChange = () => {
@@ -34,13 +35,21 @@ function NavHeader() {
 
   const handleLogout = () => {
     localStorage.removeItem('token');
-    localStorage.removeItem('username');
+    localStorage.removeItem('user');
     localStorage.removeItem('userId');
+    localStorage.removeItem('username');
     setToken(null);
     setUsername(null);
-    window.dispatchEvent(new Event('auth-change'));
     window.dispatchEvent(new CustomEvent('show-toast', { detail: 'Berhasil keluar dari akun' }));
-    navigate('/login');
+    navigate('/');
+    window.location.reload();
+  };
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (headerSearchQuery.trim()) {
+      navigate(`/?search=${encodeURIComponent(headerSearchQuery.trim())}`);
+    }
   };
 
   const openPalette = () => {
@@ -84,18 +93,24 @@ function NavHeader() {
       </div>
 
       {/* Center Glowing Search Pill matching photo */}
-      <div className="search-pill-container">
+      <form onSubmit={handleSearchSubmit} className="search-pill-container">
         <input
           type="text"
           className="search-pill-input"
           placeholder="Search code, tags, authors (Ctrl + K)"
-          onClick={openPalette}
-          readOnly
+          value={headerSearchQuery}
+          onChange={(e) => setHeaderSearchQuery(e.target.value)}
+          onKeyDown={(e) => {
+            if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+              e.preventDefault();
+              openPalette();
+            }
+          }}
         />
-        <button className="search-pill-btn" onClick={openPalette} title="Search (Ctrl+K)">
+        <button type="submit" className="search-pill-btn" title="Search">
           <Search size={16} />
         </button>
-      </div>
+      </form>
 
       {/* Right User & Notification Controls matching photo */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
