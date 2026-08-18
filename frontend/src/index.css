@@ -94,15 +94,15 @@ body {
 
 /* Navigation Header */
 .nav-header {
-  height: 68px;
+  height: 72px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 32px;
+  padding: 0 28px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(6, 10, 18, 0.92);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  background: rgba(6, 11, 20, 0.95);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
   position: sticky;
   top: 0;
   z-index: 100;
@@ -116,83 +116,252 @@ body {
   color: #fff;
   font-family: 'Plus Jakarta Sans', sans-serif;
   font-weight: 800;
-  font-size: 1.25rem;
+  font-size: 1.3rem;
   letter-spacing: -0.4px;
 }
 
 .brand-logo-box {
-  width: 38px;
-  height: 38px;
-  border-radius: 10px;
-  background: linear-gradient(135deg, #0d1a1f 0%, #061e1b 100%);
-  border: 1px solid rgba(16, 185, 129, 0.5);
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  background: rgba(16, 185, 129, 0.08);
+  border: 1.5px solid #10b981;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #34d399;
+  color: #10b981;
   font-family: 'JetBrains Mono', monospace;
-  font-size: 0.95rem;
+  font-size: 0.92rem;
   font-weight: 800;
-  box-shadow: 0 0 16px rgba(16, 185, 129, 0.35);
+  box-shadow: 0 0 14px rgba(16, 185, 129, 0.4);
 }
 
-.nav-links {
+.nav-tabs {
   display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-left: 20px;
+}
+
+.nav-tab-item {
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 0.92rem;
+  font-weight: 600;
+  padding: 24px 2px;
+  position: relative;
+  transition: color 0.2s;
+  display: inline-flex;
   align-items: center;
   gap: 6px;
 }
 
-.nav-btn {
+.nav-tab-item:hover {
+  color: #fff;
+}
+
+.nav-tab-item.active {
+  color: #fff;
+  font-weight: 700;
+}
+
+.nav-tab-item.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: #10b981;
+  border-radius: 3px 3px 0 0;
+  box-shadow: 0 0 12px #10b981;
+}
+
+/* Glowing Search Pill matching photo */
+.search-pill-container {
+  flex: 1;
+  max-width: 500px;
+  margin: 0 24px;
+  position: relative;
+}
+
+.search-pill-input {
+  width: 100%;
+  height: 42px;
+  background: rgba(8, 14, 24, 0.85);
+  border: 1.5px solid rgba(16, 185, 129, 0.55);
+  border-radius: 24px;
+  padding: 0 46px 0 18px;
+  color: #fff;
+  font-size: 0.86rem;
+  font-family: inherit;
+  outline: none;
+  box-shadow: 0 0 16px rgba(16, 185, 129, 0.2), inset 0 2px 6px rgba(0, 0, 0, 0.5);
+  transition: all 0.2s ease;
+}
+
+.search-pill-input:focus {
+  border-color: #10b981;
+  box-shadow: 0 0 22px rgba(16, 185, 129, 0.45);
+}
+
+.search-pill-btn {
+  position: absolute;
+  right: 4px;
+  top: 4px;
+  bottom: 4px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: transparent;
+  border: none;
+  color: #10b981;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.search-pill-btn:hover {
+  background: rgba(16, 185, 129, 0.15);
+}
+
+/* Left Sidebar Menu */
+.sidebar-nav-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: transparent;
+  border: 1px solid transparent;
   color: var(--text-secondary);
-  text-decoration: none;
   font-size: 0.9rem;
   font-weight: 600;
-  padding: 8px 16px;
-  border-radius: 10px;
+  text-decoration: none;
+  cursor: pointer;
   transition: all 0.15s ease;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
+  text-align: left;
 }
 
-.nav-btn:hover {
+.sidebar-nav-item:hover {
   color: #fff;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.04);
 }
 
-.nav-btn.active {
+.sidebar-nav-item.active {
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.4);
   color: #34d399;
-  background: rgba(16, 185, 129, 0.1);
-  border: 1px solid rgba(16, 185, 129, 0.3);
   box-shadow: 0 0 14px rgba(16, 185, 129, 0.15);
 }
 
-/* Glowing Primary Run Button */
-.btn-run-glow {
-  background: #10b981;
-  color: #030712 !important;
-  font-weight: 800 !important;
-  font-size: 0.82rem !important;
-  padding: 6px 16px !important;
-  border-radius: 8px !important;
-  border: none !important;
+/* Popular Tag Pills matching photo */
+.photo-tag-pill {
+  background: rgba(6, 182, 212, 0.08);
+  border: 1px solid rgba(6, 182, 212, 0.35);
+  color: #38bdf8;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.15s ease;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  cursor: pointer;
-  box-shadow: 0 0 18px rgba(16, 185, 129, 0.55);
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  gap: 4px;
 }
 
-.btn-run-glow:hover {
-  background: #34d399;
-  box-shadow: 0 0 24px rgba(16, 185, 129, 0.8);
+.photo-tag-pill:hover {
+  background: rgba(6, 182, 212, 0.18);
+  border-color: #38bdf8;
+  color: #fff;
   transform: translateY(-1px);
 }
 
-.btn-run-glow:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
+.photo-tag-pill.active {
+  background: rgba(16, 185, 129, 0.2);
+  border-color: #10b981;
+  color: #34d399;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+}
+
+/* Big Glowing Run Button matching photo */
+.action-btn-run {
+  background: #10b981;
+  color: #040910 !important;
+  font-weight: 800 !important;
+  font-size: 0.95rem !important;
+  padding: 10px 24px !important;
+  border-radius: 10px !important;
+  border: none !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.6);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  width: 100%;
+}
+
+.action-btn-run:hover {
+  background: #34d399;
+  box-shadow: 0 0 28px rgba(16, 185, 129, 0.85);
+  transform: translateY(-2px);
+}
+
+.action-btn-stat {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(13, 20, 32, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 10px 16px;
+  color: var(--text-primary);
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.action-btn-stat:hover {
+  background: rgba(20, 30, 48, 0.95);
+  border-color: rgba(16, 185, 129, 0.4);
+}
+
+/* Console Drawer Box matching photo */
+.console-box {
+  background: #050811;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-top: 14px;
+}
+
+.console-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.02);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.console-body {
+  padding: 14px 18px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85rem;
+  color: #34d399;
+  min-height: 50px;
+  line-height: 1.6;
 }
 
 /* Base Cards & Panels */

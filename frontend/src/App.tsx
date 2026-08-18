@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom';
-import { LogIn, UserPlus, LogOut, Code2, Layers, CheckCircle2, Search, Command, MessageSquare } from 'lucide-react';
+import { LogIn, UserPlus, LogOut, CheckCircle2, Search, Sparkles } from 'lucide-react';
 import PublicSnippets from './pages/PublicSnippets';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -50,152 +50,158 @@ function NavHeader() {
   return (
     <header className="nav-header">
       {/* Brand Logo */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
         <Link to="/" className="brand-link">
           <div className="brand-logo-box">
             <span>ds</span>
           </div>
           <span>Dev-Share</span>
         </Link>
+
+        {/* Navigation Tabs matching photo */}
+        <nav className="nav-tabs">
+          <Link
+            to="/"
+            className={`nav-tab-item ${location.pathname === '/' ? 'active' : ''}`}
+          >
+            Snippets
+          </Link>
+          <Link
+            to="/forum"
+            className={`nav-tab-item ${location.pathname.startsWith('/forum') ? 'active' : ''}`}
+          >
+            Forums
+          </Link>
+          {token && (
+            <Link
+              to="/dashboard"
+              className={`nav-tab-item ${location.pathname === '/dashboard' ? 'active' : ''}`}
+            >
+              Dashboard
+            </Link>
+          )}
+        </nav>
       </div>
 
-      {/* Center Search Bar with Ctrl+K badge */}
-      <div style={{ flex: 1, maxWidth: '420px', margin: '0 20px' }}>
-        <button
+      {/* Center Glowing Search Pill matching photo */}
+      <div className="search-pill-container">
+        <input
+          type="text"
+          className="search-pill-input"
+          placeholder="Search code, tags, authors (Ctrl + K)"
           onClick={openPalette}
-          style={{
-            width: '100%',
-            background: 'rgba(10, 15, 26, 0.8)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            borderRadius: '10px',
-            padding: '7px 14px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            color: 'var(--text-secondary)',
-            fontSize: '0.85rem',
-            cursor: 'pointer',
-            transition: 'all 0.2s',
-            boxShadow: 'inset 0 1px 4px rgba(0, 0, 0, 0.4)'
-          }}
-          title="Buka Command Palette (Ctrl+K)"
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Search size={15} style={{ color: 'var(--emerald)' }} />
-            <span>Search code, tags, authors...</span>
-          </div>
-          <span style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '2px',
-            background: 'rgba(255, 255, 255, 0.08)',
-            padding: '2px 6px',
-            borderRadius: '5px',
-            fontSize: '0.7rem',
-            color: 'var(--text-tertiary)'
-          }}>
-            <Command size={10} />K
-          </span>
+          readOnly
+        />
+        <button className="search-pill-btn" onClick={openPalette} title="Search (Ctrl+K)">
+          <Search size={16} />
         </button>
       </div>
 
-      {/* Right Navigation & Profile */}
-      <nav className="nav-links">
-        <Link 
-          to="/" 
-          className={`nav-btn ${location.pathname === '/' ? 'active' : ''}`}
-        >
-          <Code2 size={16} />
-          <span>Snippets</span>
-        </Link>
-
-        <Link 
-          to="/forum" 
-          className={`nav-btn ${location.pathname.startsWith('/forum') ? 'active' : ''}`}
-        >
-          <MessageSquare size={16} />
-          <span>Forum</span>
-        </Link>
-
+      {/* Right User & Notification Controls matching photo */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
         {token ? (
           <>
-            <Link 
-              to="/dashboard" 
-              className={`nav-btn ${location.pathname === '/dashboard' ? 'active' : ''}`}
-            >
-              <Layers size={16} />
-              <span>Dashboard</span>
-            </Link>
+            {/* Notification Bell with Badge */}
+            <div style={{ position: 'relative', cursor: 'pointer' }} title="Notifikasi">
+              <div style={{
+                width: '36px',
+                height: '36px',
+                borderRadius: '50%',
+                background: 'rgba(255, 255, 255, 0.04)',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'var(--text-secondary)'
+              }}>
+                <Sparkles size={16} />
+              </div>
+              <span style={{
+                position: 'absolute',
+                top: '-2px',
+                right: '-2px',
+                background: '#10b981',
+                color: '#040910',
+                fontSize: '0.68rem',
+                fontWeight: 800,
+                width: '16px',
+                height: '16px',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 0 6px #10b981'
+              }}>
+                3
+              </span>
+            </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginLeft: '6px' }}>
-              <Link 
-                to={`/u/${username}`}
-                style={{
-                  background: 'rgba(255, 255, 255, 0.04)',
-                  border: '1px solid rgba(16, 185, 129, 0.3)',
-                  padding: '4px 10px',
-                  borderRadius: '10px',
+            {/* Profile Avatar with Online Dot */}
+            <Link
+              to={`/u/${username}`}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                textDecoration: 'none',
+                background: 'rgba(255, 255, 255, 0.04)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                padding: '4px 12px 4px 5px',
+                borderRadius: '24px'
+              }}
+              title="Lihat Profil"
+            >
+              <div style={{ position: 'relative' }}>
+                <div style={{
+                  width: '30px',
+                  height: '30px',
+                  borderRadius: '50%',
+                  background: 'linear-gradient(135deg, #10b981, #06b6d4)',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '8px',
-                  fontSize: '0.85rem',
-                  textDecoration: 'none',
-                  position: 'relative'
-                }}
-                title="Lihat Profil Saya"
-              >
-                <div style={{ position: 'relative' }}>
-                  <div style={{
-                    width: '26px',
-                    height: '26px',
-                    borderRadius: '50%',
-                    background: 'linear-gradient(135deg, #10b981, #06b6d4)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '0.78rem',
-                    fontWeight: 800,
-                    color: '#040910'
-                  }}>
-                    {username ? username.charAt(0).toUpperCase() : 'U'}
-                  </div>
-                  <span style={{
-                    position: 'absolute',
-                    bottom: '-1px',
-                    right: '-1px',
-                    width: '8px',
-                    height: '8px',
-                    borderRadius: '50%',
-                    background: '#10b981',
-                    border: '2px solid #080c14'
-                  }} />
+                  justifyContent: 'center',
+                  fontWeight: 800,
+                  fontSize: '0.82rem',
+                  color: '#040910'
+                }}>
+                  {username ? username.charAt(0).toUpperCase() : 'U'}
                 </div>
-                <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{username}</span>
-              </Link>
+                <span style={{
+                  position: 'absolute',
+                  bottom: 0,
+                  right: 0,
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  background: '#10b981',
+                  border: '2px solid #080c14'
+                }} />
+              </div>
+              <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#fff' }}>{username}</span>
+            </Link>
 
-              <button 
-                onClick={handleLogout} 
-                className="btn-secondary"
-                style={{ padding: '6px 10px', borderRadius: '8px', fontSize: '0.8rem' }}
-                title="Keluar dari akun"
-              >
-                <LogOut size={13} />
-              </button>
-            </div>
+            <button
+              onClick={handleLogout}
+              className="btn-secondary"
+              style={{ padding: '6px 10px', borderRadius: '8px', fontSize: '0.78rem' }}
+              title="Keluar"
+            >
+              <LogOut size={13} />
+            </button>
           </>
         ) : (
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Link to="/login" className="btn-secondary" style={{ padding: '7px 14px', fontSize: '0.85rem' }}>
-              <LogIn size={15} />
+            <Link to="/login" className="btn-secondary" style={{ padding: '7px 16px', fontSize: '0.85rem' }}>
+              <LogIn size={14} />
               <span>Masuk</span>
             </Link>
-            <Link to="/register" className="btn-primary" style={{ padding: '7px 16px', fontSize: '0.85rem' }}>
-              <UserPlus size={15} />
+            <Link to="/register" className="btn-primary" style={{ padding: '7px 18px', fontSize: '0.85rem' }}>
+              <UserPlus size={14} />
               <span>Daftar</span>
             </Link>
           </div>
         )}
-      </nav>
+      </div>
     </header>
   );
 }
