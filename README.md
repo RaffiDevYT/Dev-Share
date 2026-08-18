@@ -14,8 +14,43 @@
 [![MySQL](https://img.shields.io/badge/MySQL-8.x-4479a1?style=flat-square&logo=mysql)](https://www.mysql.com/)
 [![License](https://img.shields.io/badge/License-MIT-emerald?style=flat-square)](LICENSE)
 
-[Fitur Utama](#-fitur-utama) • [Tech Stack](#-tech-stack) • [Prasyarat](#-prasyarat-sistem) • [Panduan Instalasi](#-panduan-instalasi-lengkap) • [Struktur Proyek](#-struktur-folder) • [Dokumentasi API](#-dokumentasi-endpoint-api)
+<br />
 
+<img src="./docs/screenshots/hero_preview.jpg" alt="Dev-Share Main Interface" width="100%" style="border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);" />
+
+<br /><br />
+
+[Tampilan & Fitur](#-tampilan-antarmuka--preview-fitur) • [Fitur Utama](#-fitur-utama) • [Tech Stack](#-tech-stack) • [Prasyarat](#-prasyarat-sistem) • [Panduan Instalasi](#-panduan-instalasi-lengkap) • [Struktur Proyek](#-struktur-folder) • [Dokumentasi API](#-dokumentasi-endpoint-api)
+
+</div>
+
+---
+
+## 📸 Tampilan Antarmuka & Preview Fitur
+
+### 1. 💻 Code Snippet Explorer & Live In-Browser Runner
+Tampilan editor kode berbasis Obsidian Dark Theme dengan PrismJS Syntax Highlighting, tag kategori, star bookmark, copy button, dan tombol *Run* untuk menjalankan kode JavaScript/TypeScript secara langsung di browser lengkap dengan console log output.
+
+<div align="center">
+  <img src="./docs/screenshots/hero_preview.jpg" alt="Code Snippet Explorer & Runner" width="90%" style="border-radius: 10px;" />
+</div>
+
+<br />
+
+### 2. 💬 Forum Diskusi & Chat Komunitas Developer
+Pusat diskusi komunitas dengan filter kategori berwarna (*Tanya Jawab & Debug*, *Tips & Best Practice*, *Showcase Project*, *Diskusi Santai*), pencarian topik, pembuatan thread baru, dan sistem balasan langsung (*nested conversation replies*).
+
+<div align="center">
+  <img src="./docs/screenshots/forum_preview.jpg" alt="Forum Diskusi & Chat Komunitas" width="90%" style="border-radius: 10px;" />
+</div>
+
+<br />
+
+### 3. 👤 Profil & Portofolio Developer
+Halaman portofolio developer yang menampilkan avatar gradien aktif, bio & sosial link (GitHub, Website, Domisili), badge keahlian *Tech Stack*, grafik distribusi persentase bahasa pemrograman, serta galeri koleksi snippet publik.
+
+<div align="center">
+  <img src="./docs/screenshots/profile_preview.jpg" alt="Profil Developer & Tech Stack Stats" width="90%" style="border-radius: 10px;" />
 </div>
 
 ---
@@ -68,8 +103,8 @@ Sebelum memulai instalasi, pastikan software berikut telah terpasang di komputer
 
 ### 1. Clone Repository
 ```bash
-git clone https://github.com/RaffiDevYT/dev-share.git
-cd dev-share
+git clone https://github.com/RaffiDevYT/Dev-Share.git
+cd Dev-Share
 ```
 
 ---
@@ -164,6 +199,8 @@ cd dev-share
 
 ```text
 dev-share/
+├── docs/
+│   └── screenshots/               # Screenshot & Gambar Preview Fitur
 ├── backend/
 │   ├── prisma/
 │   │   └── schema.prisma          # Skema database MySQL Prisma
@@ -188,6 +225,7 @@ dev-share/
 │   └── package.json
 │
 ├── .gitignore                     # Git ignore rules (mencegah leak file .env & node_modules)
+├── LICENSE                        # Lisensi Resmi MIT
 └── README.md                      # Dokumentasi & Panduan Proyek
 ```
 
@@ -223,7 +261,7 @@ dev-share/
 Dibuat dengan dedikasi untuk komunitas developer oleh **Rafi Athallah ([@RaffiDevYT](https://github.com/RaffiDevYT))**.
 
 - **GitHub**: [@RaffiDevYT](https://github.com/RaffiDevYT)
-- **Repository**: [https://github.com/RaffiDevYT/dev-share](https://github.com/RaffiDevYT/dev-share)
+- **Repository**: [https://github.com/RaffiDevYT/Dev-Share](https://github.com/RaffiDevYT/Dev-Share)
 
 ---
 
