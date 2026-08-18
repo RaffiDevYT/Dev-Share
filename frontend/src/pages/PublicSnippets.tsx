@@ -3,7 +3,6 @@ import { Link, useSearchParams } from 'react-router-dom';
 import {
   Bookmark,
   Layers,
-  Clock,
   Code2,
   FileText,
   Eye,
@@ -48,7 +47,7 @@ export default function PublicSnippets() {
 
   // Filters
   const [selectedTag, setSelectedTag] = useState('');
-  const [activeSidebarItem, setActiveSidebarItem] = useState<'all' | 'my' | 'saved' | 'drafts' | 'recent'>('all');
+  const [activeSidebarItem, setActiveSidebarItem] = useState<'all' | 'my' | 'saved' | 'drafts'>('all');
 
   // Runner and copy state per snippet
   const [runningSnippetId, setRunningSnippetId] = useState<number | null>(null);
@@ -192,10 +191,6 @@ export default function PublicSnippets() {
       return matchesSearch && matchesTag && matchesSidebar;
     });
 
-    if (activeSidebarItem === 'recent') {
-      result = [...result].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-    }
-
     return result;
   }, [snippets, searchUrlParam, selectedTag, activeSidebarItem, currentUserId]);
 
@@ -246,15 +241,6 @@ export default function PublicSnippets() {
                 <span>Drafts</span>
               </button>
             )}
-
-            <button
-              type="button"
-              onClick={() => { setActiveSidebarItem('recent'); setSelectedTag(''); }}
-              className={`sidebar-nav-item ${activeSidebarItem === 'recent' ? 'active' : ''}`}
-            >
-              <Clock size={16} />
-              <span>Recent Activity</span>
-            </button>
           </div>
 
           {/* Popular Tags Section matching photo 1 */}
