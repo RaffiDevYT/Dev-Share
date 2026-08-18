@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import {
   MessageSquare,
   Plus,
@@ -13,7 +13,8 @@ import {
   MoreHorizontal,
   FolderKanban,
   User,
-  MessagesSquare
+  MessagesSquare,
+  Radio
 } from 'lucide-react';
 import { API_URL } from '../config/api';
 
@@ -55,6 +56,14 @@ interface ForumTopic {
   replies?: ForumReply[];
 }
 
+interface LiveChatMessage {
+  id: string;
+  user: string;
+  avatar: string;
+  message: string;
+  time: string;
+}
+
 const CATEGORIES = [
   { id: 'Tanya Jawab', label: 'Q&A', count: '1.2k', color: '#10b981', badge: 'Emerald' },
   { id: 'Tips & Trik', label: 'Tips', count: '940', color: '#06b6d4', badge: 'Cyan' },
@@ -65,14 +74,23 @@ const CATEGORIES = [
 
 const CHANNELS = ['#react', '#ai-dev', '#general-chat'];
 
+const ONLINE_USERS = [
+  { initial: 'R', name: 'raffidev', color: 'linear-gradient(135deg, #10b981, #06b6d4)' },
+  { initial: 'A', name: 'alexr', color: 'linear-gradient(135deg, #3b82f6, #6366f1)' },
+  { initial: 'S', name: 'sarahk', color: 'linear-gradient(135deg, #a855f7, #ec4899)' },
+  { initial: 'B', name: 'benj', color: 'linear-gradient(135deg, #06b6d4, #3b82f6)' },
+  { initial: 'M', name: 'marial', color: 'linear-gradient(135deg, #10b981, #34d399)' }
+];
+
 export default function Forum() {
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const selectedTopicId = searchParams.get('topic');
 
   const [topics, setTopics] = useState<ForumTopic[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeCategory, setActiveCategory] = useState('Semua');
+  const [activeCategory, setActiveCategory] = useState<string>('Semua');
 
   // Detail Topic state
   const [activeTopic, setActiveTopic] = useState<ForumTopic | null>(null);
@@ -87,11 +105,17 @@ export default function Forum() {
   const [newContent, setNewContent] = useState('');
   const [submittingTopic, setSubmittingTopic] = useState(false);
 
-  // Live Chat input state in right panel
+  // Live Chat Hub State
   const [liveChatMessage, setLiveChatMessage] = useState('');
+  const [liveChatFeed, setLiveChatFeed] = useState<LiveChatMessage[]>([
+    { id: '1', user: 'Alex', avatar: 'A', message: 'Welcome to Dev-Share discussions!', time: '10:00' },
+    { id: '2', user: 'Sarah', avatar: 'S', message: 'Check out the new dark obsidian UI v2.1', time: '10:15' }
+  ]);
+
+  const [activeViewMode, setActiveViewMode] = useState<'discussions' | 'liveChat'>('discussions');
 
   const token = localStorage.getItem('token');
-  const currentUsername = localStorage.getItem('username');
+  const currentUsername = localStorage.getItem('username') || 'Guest';
 
   useEffect(() => {
     fetchTopics();
@@ -100,6 +124,7 @@ export default function Forum() {
   useEffect(() => {
     if (selectedTopicId) {
       fetchTopicDetail(parseInt(selectedTopicId, 10));
+      setActiveViewMode('discussions');
     } else {
       setActiveTopic(null);
     }
@@ -176,7 +201,7 @@ export default function Forum() {
       setShowCreateModal(false);
       setNewTitle('');
       setNewContent('');
-      fetchTopics();
+      await fetchTopics();
       if (data.topic?.id) {
         setSearchParams({ topic: String(data.topic.id) });
       }
@@ -260,10 +285,27 @@ export default function Forum() {
     }
   };
 
+  const handleSendLiveChatMessage = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!liveChatMessage.trim()) return;
+
+    const newMsg: LiveChatMessage = {
+      id: String(Date.now()),
+      user: currentUsername,
+      avatar: currentUsername.charAt(0).toUpperCase(),
+      message: liveChatMessage.trim(),
+      time: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
+    };
+
+    setLiveChatFeed(prev => [...prev, newMsg]);
+    setLiveChatMessage('');
+    window.dispatchEvent(new CustomEvent('show-toast', { detail: 'Pesan live chat terkirim!' }));
+  };
+
   const getCategoryMeta = (cat: string) => {
     const item = CATEGORIES.find(c => c.id === cat || c.label === cat);
     if (item) return item;
-    return { id: cat, label: cat, color: '#10b981', badge: 'Emerald' };
+    return { id: cat, label: cat, count: '100', color: '#10b981', badge: 'Emerald' };
   };
 
   // Filtered list by query
@@ -288,25 +330,29 @@ export default function Forum() {
 
             <button
               type="button"
-              onClick={() => { setActiveCategory('Semua'); setSearchParams({}); }}
-              className="sidebar-nav-item"
+              onClick={() => { setActiveCategory('Semua'); setSearchParams({}); setActiveViewMode('discussions'); }}
+              className={`sidebar-nav-item ${activeViewMode === 'discussions' && activeCategory === 'Semua' && !selectedTopicId ? 'active' : ''}`}
             >
               <MessagesSquare size={16} />
               <span>Forums</span>
             </button>
 
-            <div className="sidebar-nav-item">
+            <button
+              type="button"
+              onClick={() => setActiveViewMode('liveChat')}
+              className={`sidebar-nav-item ${activeViewMode === 'liveChat' ? 'active' : ''}`}
+            >
               <MessageSquare size={16} />
               <span>Live Chat</span>
-            </div>
+            </button>
 
-            <div className="sidebar-nav-item">
+            <Link to="/" className="sidebar-nav-item">
               <FolderKanban size={16} />
               <span>Projects</span>
-            </div>
+            </Link>
 
-            {currentUsername && (
-              <Link to={`/u/${currentUsername}`} className="sidebar-nav-item active">
+            {token && (
+              <Link to={`/u/${currentUsername}`} className="sidebar-nav-item">
                 <User size={16} />
                 <span>Profile</span>
               </Link>
@@ -315,16 +361,31 @@ export default function Forum() {
 
           {/* Categories matching photo 2 */}
           <div style={{ marginBottom: '24px' }}>
-            <h4 style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-tertiary)', marginBottom: '10px' }}>
-              Categories
-            </h4>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+              <h4 style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-tertiary)' }}>
+                Categories
+              </h4>
+              {activeCategory !== 'Semua' && (
+                <button
+                  onClick={() => setActiveCategory('Semua')}
+                  style={{ background: 'none', border: 'none', color: '#10b981', fontSize: '0.74rem', cursor: 'pointer' }}
+                >
+                  All
+                </button>
+              )}
+            </div>
+
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               {CATEGORIES.map((cat) => {
                 const isActive = activeCategory === cat.id;
                 return (
                   <button
                     key={cat.id}
-                    onClick={() => setActiveCategory(cat.id)}
+                    onClick={() => {
+                      setActiveCategory(isActive ? 'Semua' : cat.id);
+                      setSearchParams({});
+                      setActiveViewMode('discussions');
+                    }}
                     style={{
                       display: 'flex',
                       alignItems: 'center',
@@ -337,7 +398,8 @@ export default function Forum() {
                       fontWeight: 800,
                       border: 'none',
                       cursor: 'pointer',
-                      boxShadow: isActive ? `0 0 12px ${cat.color}` : 'none',
+                      boxShadow: isActive ? `0 0 14px ${cat.color}` : 'none',
+                      transform: isActive ? 'scale(1.02)' : 'none',
                       transition: 'all 0.15s'
                     }}
                   >
@@ -358,16 +420,20 @@ export default function Forum() {
               {CHANNELS.map((ch) => (
                 <div
                   key={ch}
-                  onClick={() => setSearchQuery(ch.replace('#', ''))}
+                  onClick={() => {
+                    setSearchQuery(ch.replace('#', ''));
+                    setActiveViewMode('discussions');
+                  }}
                   style={{
                     fontSize: '0.84rem',
-                    color: 'var(--text-secondary)',
+                    color: searchQuery === ch.replace('#', '') ? '#10b981' : 'var(--text-secondary)',
                     padding: '4px 8px',
                     borderRadius: '6px',
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '6px'
+                    gap: '6px',
+                    background: searchQuery === ch.replace('#', '') ? 'rgba(16, 185, 129, 0.1)' : 'transparent'
                   }}
                 >
                   <TagIcon size={12} style={{ color: '#10b981' }} />
@@ -378,9 +444,79 @@ export default function Forum() {
           </div>
         </aside>
 
-        {/* Center Column: Community Discussions Feed matching photo 2 */}
+        {/* Center Column: Discussions Feed & Thread View matching photo 2 */}
         <main>
-          {activeTopic ? (
+          {activeViewMode === 'liveChat' ? (
+            /* FULL LIVE CHAT VIEW */
+            <div className="app-card animate-fade-in" style={{ padding: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px', borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: '12px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <Radio size={18} style={{ color: '#10b981' }} className="animate-pulse" />
+                  <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#fff' }}>Dev-Share Global Live Chat Room</h3>
+                </div>
+                <span style={{ fontSize: '0.78rem', color: '#10b981', fontWeight: 700 }}>🟢 5 Developers Online</span>
+              </div>
+
+              {/* Chat Feed */}
+              <div style={{
+                background: '#060b13',
+                border: '1px solid rgba(255,255,255,0.06)',
+                borderRadius: '12px',
+                padding: '16px',
+                minHeight: '380px',
+                maxHeight: '440px',
+                overflowY: 'auto',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '12px',
+                marginBottom: '16px'
+              }}>
+                {liveChatFeed.map((msg) => (
+                  <div key={msg.id} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+                    <div style={{
+                      width: '28px',
+                      height: '28px',
+                      borderRadius: '50%',
+                      background: 'linear-gradient(135deg, #10b981, #06b6d4)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontWeight: 800,
+                      fontSize: '0.74rem',
+                      color: '#040910'
+                    }}>
+                      {msg.avatar}
+                    </div>
+                    <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)', padding: '8px 14px', borderRadius: '10px', maxWidth: '80%' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', gap: '16px', fontSize: '0.74rem', color: 'var(--text-tertiary)', marginBottom: '3px' }}>
+                        <strong style={{ color: '#fff' }}>{msg.user}</strong>
+                        <span>{msg.time}</span>
+                      </div>
+                      <div style={{ color: '#e2e8f0', fontSize: '0.88rem', lineHeight: '1.4' }}>
+                        {msg.message}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Compose */}
+              <form onSubmit={handleSendLiveChatMessage} style={{ display: 'flex', gap: '10px' }}>
+                <input
+                  type="text"
+                  placeholder="Ketik pesan obrolan langsung..."
+                  className="app-input"
+                  value={liveChatMessage}
+                  onChange={(e) => setLiveChatMessage(e.target.value)}
+                  style={{ flex: 1 }}
+                />
+                <button type="submit" className="btn-primary" style={{ padding: '8px 22px' }}>
+                  <Send size={14} />
+                  <span>Kirim</span>
+                </button>
+              </form>
+            </div>
+          ) : activeTopic ? (
             /* DETAIL THREAD VIEW */
             <div className="animate-fade-in">
               <button
@@ -413,7 +549,7 @@ export default function Forum() {
                     </h2>
                   </div>
 
-                  {currentUsername?.toLowerCase() === activeTopic.user?.username?.toLowerCase() && (
+                  {currentUsername?.toLowerCase() === activeTopic.author?.username?.toLowerCase() && (
                     <button
                       onClick={() => handleDeleteTopic(activeTopic.id)}
                       className="btn-secondary"
@@ -438,14 +574,14 @@ export default function Forum() {
                     fontSize: '0.85rem',
                     color: '#040910'
                   }}>
-                    {activeTopic.user?.username ? activeTopic.user.username.charAt(0).toUpperCase() : 'U'}
+                    {activeTopic.author?.username ? activeTopic.author.username.charAt(0).toUpperCase() : 'U'}
                   </div>
                   <div>
-                    <Link to={`/u/${activeTopic.user?.username}`} style={{ color: '#fff', fontWeight: 600, fontSize: '0.86rem', textDecoration: 'none' }}>
-                      @{activeTopic.user?.username}
+                    <Link to={`/u/${activeTopic.author?.username}`} style={{ color: '#fff', fontWeight: 600, fontSize: '0.86rem', textDecoration: 'none' }}>
+                      @{activeTopic.author?.username}
                     </Link>
                     <div style={{ fontSize: '0.72rem', color: 'var(--text-tertiary)' }}>
-                      {new Date(activeTopic.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                      {new Date(activeTopic.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
                     </div>
                   </div>
                 </div>
@@ -500,7 +636,7 @@ export default function Forum() {
                 <form onSubmit={handleSendReply} className="chat-compose-card">
                   <textarea
                     className="chat-input"
-                    placeholder={token ? 'Write a reply or code solution...' : 'Login to reply in discussion'}
+                    placeholder={token ? 'Tuliskan solusi atau tanggapan Anda...' : 'Masuk log untuk membalas diskusi'}
                     value={replyContent}
                     onChange={(e) => setReplyContent(e.target.value)}
                     disabled={!token || submittingReply}
@@ -541,7 +677,7 @@ export default function Forum() {
                   }}>
                     Active threads
                   </span>
-                  {token && (
+                  {token ? (
                     <button
                       onClick={() => setShowCreateModal(true)}
                       className="btn-primary"
@@ -550,6 +686,14 @@ export default function Forum() {
                       <Plus size={14} />
                       <span>New Topic</span>
                     </button>
+                  ) : (
+                    <Link
+                      to="/login"
+                      className="btn-secondary"
+                      style={{ padding: '6px 14px', fontSize: '0.82rem' }}
+                    >
+                      Login to Post
+                    </Link>
                   )}
                 </div>
               </div>
@@ -557,13 +701,17 @@ export default function Forum() {
               {/* Discussion Cards matching photo 2 */}
               {loading ? (
                 <div className="app-card" style={{ padding: '40px', textAlign: 'center' }}>
+                  <div className="animate-spin" style={{ width: '32px', height: '32px', border: '3px solid rgba(16, 185, 129, 0.2)', borderTopColor: 'var(--emerald)', borderRadius: '50%', margin: '0 auto 12px' }} />
                   <p style={{ color: 'var(--text-secondary)' }}>Loading community threads...</p>
                 </div>
               ) : displayedTopics.length === 0 ? (
                 <div className="app-card" style={{ padding: '48px 20px', textAlign: 'center' }}>
                   <MessageSquare size={36} style={{ color: 'var(--text-tertiary)', marginBottom: '10px' }} />
                   <h4 style={{ color: '#fff', fontSize: '1.1rem', fontWeight: 700, marginBottom: '4px' }}>No Discussions Found</h4>
-                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.84rem' }}>Be the first to start a conversation in this category!</p>
+                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.84rem', marginBottom: '14px' }}>Be the first to start a conversation in this category!</p>
+                  <button onClick={() => setShowCreateModal(true)} className="btn-primary" style={{ padding: '7px 16px', fontSize: '0.82rem' }}>
+                    Create First Topic
+                  </button>
                 </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
@@ -664,56 +812,29 @@ export default function Forum() {
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-              {/* Item 1 */}
-              <div style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.04)', paddingBottom: '10px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
-                  <div style={{ width: '18px', height: '18px', borderRadius: '50%', background: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.6rem', fontWeight: 800, color: '#040910' }}>A</div>
-                  <span style={{ fontSize: '0.78rem', fontWeight: 600, color: '#fff' }}>Alex R.</span>
+              {topics.slice(0, 3).map((t, idx) => (
+                <div
+                  key={t.id}
+                  onClick={() => setSearchParams({ topic: String(t.id) })}
+                  style={{ cursor: 'pointer', borderBottom: idx < 2 ? '1px solid rgba(255,255,255,0.04)' : 'none', paddingBottom: '10px' }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                    <div style={{ width: '18px', height: '18px', borderRadius: '50%', background: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.6rem', fontWeight: 800, color: '#040910' }}>
+                      {t.author?.username?.charAt(0).toUpperCase() || 'A'}
+                    </div>
+                    <span style={{ fontSize: '0.78rem', fontWeight: 600, color: '#fff' }}>{t.author?.username || 'Alex R.'}</span>
+                  </div>
+                  <div style={{ fontSize: '0.84rem', fontWeight: 700, color: '#fff', lineHeight: '1.3', marginBottom: '4px' }}>
+                    {t.title}
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.72rem', color: 'var(--text-tertiary)' }}>
+                    <span>5 min ago</span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '3px', color: '#f43f5e' }}>
+                      <Heart size={11} fill="#f43f5e" /> {120 - idx * 25}
+                    </span>
+                  </div>
                 </div>
-                <div style={{ fontSize: '0.84rem', fontWeight: 700, color: '#fff', lineHeight: '1.3', marginBottom: '4px' }}>
-                  Optimizing React Performance with Concurrent Mode
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.72rem', color: 'var(--text-tertiary)' }}>
-                  <span>5 min ago</span>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '3px', color: '#f43f5e' }}>
-                    <Heart size={11} fill="#f43f5e" /> 124
-                  </span>
-                </div>
-              </div>
-
-              {/* Item 2 */}
-              <div style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.04)', paddingBottom: '10px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
-                  <div style={{ width: '18px', height: '18px', borderRadius: '50%', background: '#a855f7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.6rem', fontWeight: 800, color: '#fff' }}>S</div>
-                  <span style={{ fontSize: '0.78rem', fontWeight: 600, color: '#fff' }}>Sarah K.</span>
-                </div>
-                <div style={{ fontSize: '0.84rem', fontWeight: 700, color: '#fff', lineHeight: '1.3', marginBottom: '4px' }}>
-                  Introducing Dev-Share UI v2.1!
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.72rem', color: 'var(--text-tertiary)' }}>
-                  <span>5 min ago</span>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '3px', color: '#f43f5e' }}>
-                    <Heart size={11} fill="#f43f5e" /> 67
-                  </span>
-                </div>
-              </div>
-
-              {/* Item 3 */}
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
-                  <div style={{ width: '18px', height: '18px', borderRadius: '50%', background: '#06b6d4', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.6rem', fontWeight: 800, color: '#040910' }}>B</div>
-                  <span style={{ fontSize: '0.78rem', fontWeight: 600, color: '#fff' }}>Ben J.</span>
-                </div>
-                <div style={{ fontSize: '0.84rem', fontWeight: 700, color: '#fff', lineHeight: '1.3', marginBottom: '4px' }}>
-                  Best Practices for Docker Deployment
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.72rem', color: 'var(--text-tertiary)' }}>
-                  <span>1 hour ago</span>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '3px', color: '#f43f5e' }}>
-                    <Heart size={11} fill="#f43f5e" /> 88
-                  </span>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
 
@@ -727,24 +848,27 @@ export default function Forum() {
             </div>
 
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center', justifyContent: 'space-between' }}>
-              {['R', 'A', 'S', 'B', 'M'].map((initial, i) => (
+              {ONLINE_USERS.map((usr) => (
                 <div
-                  key={i}
+                  key={usr.name}
+                  onClick={() => navigate(`/u/${usr.name}`)}
                   style={{
                     position: 'relative',
                     width: '36px',
                     height: '36px',
                     borderRadius: '50%',
-                    background: `linear-gradient(135deg, ${i % 2 === 0 ? '#10b981, #06b6d4' : '#8b5cf6, #ec4899'})`,
+                    background: usr.color,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     fontWeight: 800,
                     fontSize: '0.82rem',
-                    color: '#fff'
+                    color: '#fff',
+                    cursor: 'pointer'
                   }}
+                  title={`Lihat profil ${usr.name}`}
                 >
-                  {initial}
+                  {usr.initial}
                   <span style={{
                     position: 'absolute',
                     bottom: 0,
@@ -779,36 +903,26 @@ export default function Forum() {
               overflowY: 'auto',
               display: 'flex',
               flexDirection: 'column',
-              justifyContent: 'flex-end',
               gap: '6px',
               marginBottom: '8px'
             }}>
               <div style={{ fontSize: '0.74rem', color: 'var(--text-tertiary)', textAlign: 'center', marginBottom: '4px' }}>
                 🟢 Live Hub Connected
               </div>
-              <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
-                <strong style={{ color: '#10b981' }}>Alex:</strong> Welcome to Dev-Share discussions!
-              </div>
-              {liveChatMessage && (
-                <div style={{ fontSize: '0.78rem', color: '#fff' }}>
-                  <strong style={{ color: 'var(--cyan)' }}>{currentUsername || 'You'}:</strong> {liveChatMessage}
+              {liveChatFeed.slice(-3).map((msg) => (
+                <div key={msg.id} style={{ fontSize: '0.78rem', color: '#e2e8f0' }}>
+                  <strong style={{ color: msg.user === 'Alex' ? '#10b981' : msg.user === 'Sarah' ? '#a855f7' : 'var(--cyan)' }}>
+                    {msg.user}:
+                  </strong>{' '}
+                  {msg.message}
                 </div>
-              )}
+              ))}
             </div>
 
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                if (liveChatMessage.trim()) {
-                  window.dispatchEvent(new CustomEvent('show-toast', { detail: `Pesan chat terkirim: "${liveChatMessage.trim()}"` }));
-                  setLiveChatMessage('');
-                }
-              }}
-              style={{ display: 'flex', gap: '6px' }}
-            >
+            <form onSubmit={handleSendLiveChatMessage} style={{ display: 'flex', gap: '6px' }}>
               <input
                 type="text"
-                placeholder="Live out here... (Enter to send)"
+                placeholder="Live out here... (Enter)"
                 value={liveChatMessage}
                 onChange={(e) => setLiveChatMessage(e.target.value)}
                 style={{
